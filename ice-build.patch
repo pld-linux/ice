@@ -1,0 +1,16 @@
+--- Makefile.orig	2010-04-01 22:20:42.058742598 +0200
++++ Makefile	2010-04-01 22:28:58.832850829 +0200
+@@ -7,10 +7,10 @@
+ #
+ # **********************************************************************
+ 
+-SUBDIRS			= cpp java cs py rb php
+-CLEAN_SUBDIRS		= java cs py rb php cpp
++SUBDIRS			= cpp cs py rb php
++CLEAN_SUBDIRS		= cs py rb php cpp
+ DEPEND_SUBDIRS		= cpp cs py rb php
+-INSTALL_SUBDIRS		= cpp java cs py rb php
++INSTALL_SUBDIRS		= cpp cs py rb php
+ 
+ all::
+ 	@for subdir in $(SUBDIRS); \
