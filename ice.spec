@@ -4,7 +4,7 @@ Summary(pl.UTF-8):	Ice
 Name:		Ice
 Version:	3.4.0
 Release:	1
-License:	GPL
+License:	GPL and Custom (see ICE_LICENSE)
 Group:		Applications
 Source0:	http://www.zeroc.com/download/Ice/3.4/%{name}-%{version}.tar.gz
 # Source0-md5:	998b10627ade020cb00f5beb73efc0e0
@@ -42,7 +42,7 @@ Pliki nagłówkowe bibliotekiIce.
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT/usr
+install -d $RPM_BUILD_ROOT{/usr,%{_datadir},%{_datadir}/%{name}}
 
 %{__make} install \
 	prefix=$RPM_BUILD_ROOT
@@ -50,6 +50,7 @@ install -d $RPM_BUILD_ROOT/usr
 mv $RPM_BUILD_ROOT/bin $RPM_BUILD_ROOT/usr
 mv $RPM_BUILD_ROOT/include $RPM_BUILD_ROOT/usr
 mv $RPM_BUILD_ROOT/lib64 $RPM_BUILD_ROOT/usr
+mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/%{name}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -59,6 +60,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
+%doc ICE_LICENSE
 %attr(755,root,root) %{_bindir}/dumpdb
 %attr(755,root,root) %{_bindir}/glacier2router
 %attr(755,root,root) %{_bindir}/icebox
@@ -112,6 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %ghost %{_libdir}/libIceXML.so.34
 %attr(755,root,root) %{_libdir}/libSlice.so.3.4.0
 %attr(755,root,root) %ghost %{_libdir}/libSlice.so.34
+%{_datadir}/%{name}
 
 %files devel
 %defattr(644,root,root,755)
