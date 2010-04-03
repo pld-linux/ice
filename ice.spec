@@ -1,39 +1,47 @@
-
-Summary:	Ice
-Summary(pl.UTF-8):	Ice
-Name:		Ice
+# TODO
+# - get stuff from fc spec
+# - cc/cflags
+# - language bindings
+Summary:	The Ice base runtime and services
+Name:		ice
 Version:	3.4.0
-Release:	1
-License:	GPL and Custom (see ICE_LICENSE)
+Release:	0.1
+License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
-Source0:	http://www.zeroc.com/download/Ice/3.4/%{name}-%{version}.tar.gz
+Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
 # Source0-md5:	998b10627ade020cb00f5beb73efc0e0
-URL:		http://www.zeroc.com
+URL:		http://www.zeroc.com/
 Patch0:		%{name}-build.patch
-BuildRequires:	db4.5-cxx-devel
+BuildRequires:	db-cxx-devel
 BuildRequires:	mcpp-devel
+# drop these O/P if not needed
+Provides:	Ice
+Obsoletes:	Ice
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-Ice.
-
-%description -l pl.UTF-8
-Ice.
+Ice is a modern alternative to object middleware such as CORBA or
+COM/DCOM/COM+. It is easy to learn, yet provides a powerful network
+infrastructure for demanding technical applications. It features an
+object-oriented specification language, easy to use C++, C#, Java,
+Python, Ruby, PHP, and Visual Basic mappings, a highly efficient
+protocol, asynchronous method invocation and dispatch, dynamic
+transport plug-ins, TCP/IP and UDP/IP support, SSL-based security, a
+firewall solution, and much more.
 
 %package devel
-Summary:	Header files for Ice library
-Summary(pl.UTF-8):	Pliki nagłówkowe bibliotekiIce
+Summary:	Tools for developing Ice applications in C++
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
+# drop these O/P if not needed
+Provides:	Ice-devel
+Obsoletes:	Ice-devel
 
 %description devel
-Header files for Ice library.
-
-%description devel -l pl.UTF-8
-Pliki nagłówkowe bibliotekiIce.
+Tools for developing Ice applications in C++.
 
 %prep
-%setup -q
+%setup -q -n Ice-%{version}
 %patch0 -p0
 
 %build
@@ -42,15 +50,15 @@ Pliki nagłówkowe bibliotekiIce.
 %install
 rm -rf $RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT{/usr,%{_datadir},%{_datadir}/%{name}}
+install -d $RPM_BUILD_ROOT{%{_prefix},%{_datadir},%{_datadir}/Ice}
 
 %{__make} install \
 	prefix=$RPM_BUILD_ROOT
 
-mv $RPM_BUILD_ROOT/bin $RPM_BUILD_ROOT/usr
-mv $RPM_BUILD_ROOT/include $RPM_BUILD_ROOT/usr
-mv $RPM_BUILD_ROOT/lib64 $RPM_BUILD_ROOT/usr
-mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/%{name}
+mv $RPM_BUILD_ROOT/bin $RPM_BUILD_ROOT%{_prefix}
+mv $RPM_BUILD_ROOT/include $RPM_BUILD_ROOT%{_prefix}
+mv $RPM_BUILD_ROOT/lib64 $RPM_BUILD_ROOT%{_prefix}
+mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -114,7 +122,7 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %ghost %{_libdir}/libIceXML.so.34
 %attr(755,root,root) %{_libdir}/libSlice.so.3.4.0
 %attr(755,root,root) %ghost %{_libdir}/libSlice.so.34
-%{_datadir}/%{name}
+%{_datadir}/Ice
 
 %files devel
 %defattr(644,root,root,755)
