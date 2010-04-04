@@ -1,7 +1,7 @@
 # TODO
 # - use our CC/CXX
 # - man pages tarball
-# - ImportKey.class is part of main pkg, thus needs javac
+# - finish (pldize) -servers package
 #
 # Conditional build:
 %bcond_without	java		# Java bindings
@@ -33,7 +33,7 @@ Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
-%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
+%{?with_gui:BuildRequires: ImageMagick}
 BuildRequires:	db-cxx-devel
 %{?with_java:BuildRequires:	db-java-devel}
 %{?with_java:BuildRequires:	java-jgoodies-forms}
@@ -42,9 +42,7 @@ BuildRequires:	mcpp-devel
 %{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
 %{?with_python:BuildRequires:	rpm-pythonprov}
 BuildRequires:	rpmbuild(macros) >= 1.519
-# drop these O/P if not needed
-Provides:	Ice
-Obsoletes:	Ice
+%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
 # Ice doesn't officially support ppc64 at all; sparc64 doesnt have mono
 ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
@@ -66,9 +64,6 @@ firewall solution, and much more.
 Summary:	Tools for developing Ice applications in C++
 Group:		Development/Libraries
 Requires:	%{name} = %{version}-%{release}
-# drop these O/P if not needed
-Provides:	Ice-devel
-Obsoletes:	Ice-devel
 
 %description devel
 Tools for developing Ice applications in C++.
@@ -168,14 +163,25 @@ sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rp
 %build
 # Compile the main Ice runtime
 # TODO: CC/CXX passing as make param breaks build system
+
+%if %{with java}
+# Rebuild the Java ImportKey class - need it early for main cpp build
+javac cpp/src/ca/ImportKey.java
+%endif
+
 %{__make} -C cpp \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
 
+%if %{with gui}
+# Create the IceGrid icon
+convert java/resources/icons/icegrid.ico temp.png
+mv temp-8.png java/resources/icons/icegrid.png
+rm temp*.png
+%endif
+
 %if %{with java}
-# Rebuild the Java ImportKey class
-javac cpp/src/ca/ImportKey.java
 
 # Set the CLASSPATH correctly for the Java compile
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
@@ -184,13 +190,6 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
-
-# Create the IceGrid icon
-cd java/resources/icons
-convert icegrid.ico temp.png
-mv temp-8.png icegrid.png
-rm temp*.png
-cd -
 %endif
 
 %if %{with dotnet}
@@ -224,20 +223,19 @@ cd -
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_docdir}/Ice-%{version},%{_datadir}/Ice}
+install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_includedir},%{_docdir}/Ice-%{version},%{_datadir}/Ice}
 
 %{__make} -C cpp install \
 	prefix=$RPM_BUILD_ROOT
 
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_includedir}
 mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
 # Move the ImportKey.class file
 mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 # There are a couple of files that end up installed in /lib, not %{_libdir},
 # so we try this move too.
 mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
-mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir}
+mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || :
 
 %if %{with java}
 %{__make} -C java install \
@@ -257,9 +255,9 @@ ln -s Freeze-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/Freeze.jar
 # Install the IceGrid GUI
 install -d $RPM_BUILD_ROOT{%{_pixmapsdir},%{_desktopdir}}
 mv $RPM_BUILD_ROOT/lib/IceGridGUI.jar $RPM_BUILD_ROOT%{_datadir}/Ice
-cp -a java/resources/icons/icegrid.png $RPM_BUILD_ROOT%{_pixmapsdir}
 cp -a %{SOURCE3} $RPM_BUILD_ROOT%{_desktopdir}
 install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}
+cp -a java/resources/icons/icegrid.png $RPM_BUILD_ROOT%{_pixmapsdir}
 mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 %endif
 
@@ -329,14 +327,12 @@ install -d $RPM_BUILD_ROOT%{_mandir}/man1
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
-# Somehow, some files under "slice" end up with executable permissions -- ??
-find $RPM_BUILD_ROOT%{_datadir}/Ice -name "*.ice" | xargs chmod a-x
 
 # Move the license files into the documentation directory
 mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
 mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
 # Copy in the other files too
-cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/
+cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -368,8 +364,8 @@ fi
 %attr(755,root,root) %{_bindir}/icepatch2server
 %attr(755,root,root) %{_bindir}/icestormadmin
 %attr(755,root,root) %{_bindir}/icestormmigrate
-%attr(755,root,root) %{_bindir}/transformdb
 %attr(755,root,root) %{_bindir}/slice2html
+%attr(755,root,root) %{_bindir}/transformdb
 %attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
