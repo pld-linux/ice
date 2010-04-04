@@ -18,9 +18,10 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	0.4
+Release:	0.5
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
+URL:		http://www.zeroc.com/
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
 # Source0-md5:	998b10627ade020cb00f5beb73efc0e0
 # Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
@@ -28,19 +29,18 @@ Source1:	Ice-rpmbuild-%{version}.tar.gz
 # Source1-md5:	869cc60645e7e2b4115584a5ab17d1e9
 Source2:	%{name}gridgui
 Source3:	IceGridAdmin.desktop
-URL:		http://www.zeroc.com/
 Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
-%{?with_python:BuildRequires:	rpm-pythonprov}
-%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
 Patch3:		jgoodies.patch
+%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
 BuildRequires:	db-cxx-devel
 %{?with_java:BuildRequires:	db-java-devel}
 %{?with_java:BuildRequires:	java-jgoodies-forms}
 %{?with_java:BuildRequires:	java-jgoodies-looks}
 BuildRequires:	mcpp-devel
 %{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
+%{?with_python:BuildRequires:	rpm-pythonprov}
 BuildRequires:	rpmbuild(macros) >= 1.519
 # drop these O/P if not needed
 Provides:	Ice
@@ -157,10 +157,13 @@ for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html
 done
 cd -
 
+%if %{with java}
+# we nuke it only when we build new class later, as ice build system expects the file being around
 rm cpp/src/ca/ImportKey.class
+%endif
 
 # update path to our install
-sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/bin/iceca cpp/src/ca/iceca icegridregistry.conf
+sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rpmbuild-%{version}/icegridregistry.conf
 
 %build
 # Compile the main Ice runtime
@@ -221,23 +224,20 @@ cd -
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d $RPM_BUILD_ROOT{%{_docdir}/Ice-%{version},%{_datadir}/Ice}
+install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_docdir}/Ice-%{version},%{_datadir}/Ice}
 
 %{__make} -C cpp install \
 	prefix=$RPM_BUILD_ROOT
 
-install -d $RPM_BUILD_ROOT%{_bindir}
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 install -d $RPM_BUILD_ROOT%{_includedir}
 mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
-install -d $RPM_BUILD_ROOT%{_libdir}
+# Move the ImportKey.class file
+mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 # There are a couple of files that end up installed in /lib, not %{_libdir},
 # so we try this move too.
 mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
-mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || true
-
-# Move the ImportKey.class file
-mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
+mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir}
 
 %if %{with java}
 %{__make} -C java install \
@@ -255,14 +255,11 @@ ln -s Freeze-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/Freeze.jar
 
 %if %{with gui}
 # Install the IceGrid GUI
+install -d $RPM_BUILD_ROOT{%{_pixmapsdir},%{_desktopdir}}
 mv $RPM_BUILD_ROOT/lib/IceGridGUI.jar $RPM_BUILD_ROOT%{_datadir}/Ice
-install -d $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/48x48/apps
-cp -a java/resources/icons/icegrid.png \
-        $RPM_BUILD_ROOT%{_datadir}/icons/hicolor/48x48/apps
-install -d $RPM_BUILD_ROOT%{_bindir}
-install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_desktopdir}
+cp -a java/resources/icons/icegrid.png $RPM_BUILD_ROOT%{_pixmapsdir}
 cp -a %{SOURCE3} $RPM_BUILD_ROOT%{_desktopdir}
+install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}
 mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 %endif
 
@@ -273,12 +270,13 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 	GACINSTALL=yes \
 	GAC_ROOT=$RPM_BUILD_ROOT%{_libdir} \
 
+mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 # .NET spec files (for csharp-devel) -- convert the paths
 for f in IceGrid Glacier2 IceBox Ice IceStorm IcePatch2; do
 	sed -i -e "s#/lib/#%{_libdir}/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	mv $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc $RPM_BUILD_ROOT%{_pkgconfigdir}/$f.pc
-	mv $RPM_BUILD_ROOT/bin/$f.xml $RPM_BUILD_ROOT%{_libdir}/mono/gac/$f/%{version}.*/
+	mv $RPM_BUILD_ROOT%{_bindir}/$f.xml $RPM_BUILD_ROOT%{_libdir}/mono/gac/$f/%{version}.*/
 done
 %endif
 
@@ -356,6 +354,7 @@ fi
 
 %files
 %defattr(644,root,root,755)
+%doc %{_docdir}/Ice-%{version}
 %attr(755,root,root) %{_bindir}/dumpdb
 %attr(755,root,root) %{_bindir}/glacier2router
 %attr(755,root,root) %{_bindir}/icebox
@@ -403,15 +402,20 @@ fi
 %attr(755,root,root) %ghost %{_libdir}/libSlice.so.%{soversion}
 %{_datadir}/Ice
 
-# XXX gui
-%if %{with gui}
-%attr(755,root,root) %{_bindir}/icegridgui
-%{_desktopdir}/IceGridAdmin.desktop
-%{_iconsdir}/hicolor/*/apps/icegrid.png
-%endif
+# Exclude the stuff that's in IceGrid
+%exclude %{_docdir}/Ice-%{version}/IceGridAdmin
+%exclude %{_datadir}/Ice/IceGridGUI.jar
 
-# XXX doc
-%doc %{_docdir}/Ice-%{version}
+%if %{with gui}
+%files -n icegrid-gui
+%defattr(644,root,root,755)
+%doc %{_docdir}/Ice-%{version}/IceGridAdmin
+%attr(755,root,root) %{_bindir}/icegridgui
+%{_datadir}/Ice/IceGridGUI.jar
+#%{_mandir}/man1/icegridgui.1*
+%{_desktopdir}/IceGridAdmin.desktop
+%{_pixmapsdir}/icegrid.png
+%endif
 
 %files devel
 %defattr(644,root,root,755)
