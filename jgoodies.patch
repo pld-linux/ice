@@ -1,0 +1,13 @@
+Remove reference to Windows L&F
+--- Ice-3.3.1/java/src/IceGridGUI/ApplicationPane.java.orig	2009-03-25 11:30:28.000000000 +0100
++++ Ice-3.3.1/java/src/IceGridGUI/ApplicationPane.java	2009-03-25 11:30:51.000000000 +0100
+@@ -26,9 +26,6 @@
+ import javax.swing.tree.TreePath;
+ import javax.swing.tree.TreeSelectionModel;
+ 
+-import com.jgoodies.looks.Options;
+-import com.jgoodies.looks.plastic.PlasticLookAndFeel;
+-import com.jgoodies.looks.windows.WindowsLookAndFeel;
+ import com.jgoodies.forms.factories.Borders;
+ 
+ import IceGrid.*;

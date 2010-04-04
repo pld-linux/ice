@@ -1,0 +1,54 @@
+Don't put manifest in jar; don't build demo or test; use system jgoodies
+
+diff -ur Ice-3.4.0.orig/java/build.xml Ice-3.4.0/java/build.xml
+--- Ice-3.4.0.orig/java/build.xml	2010-03-12 12:51:00.743391980 +0000
++++ Ice-3.4.0/java/build.xml	2010-03-12 12:54:01.002548076 +0000
+@@ -230,7 +230,6 @@
+             <include name="Freeze/**"/>
+             <manifest>
+                 <attribute name="Built-By" value="ZeroC, Inc."/>
+-                <attribute name="Class-Path" value="db.jar db-${db.version}.jar /usr/share/java/db-${db.version}.jar ../db.jar"/>
+             </manifest>
+         </jar>
+         <jar jarfile="${lib.dir}/Freeze.jar" basedir="${src.dir}" update="yes">
+@@ -508,17 +507,12 @@
+     </condition>
+ 
+     <target name="icegridadmin-plain-jar" depends="icegridadmin-compile" if="build-icegridadmin-plain-jar" unless="ice.bin.dist">
+-        <manifest file="${lib.dir}/icegridgui.mf">
+-            <attribute name="Main-Class" value="IceGridGUI.Main"/>
+-            <attribute name="Class-Path" value="Ice.jar ${jgoodies.forms} ${jgoodies.looks} ../resources/ "/>
+-        </manifest>
+-        <jar jarfile="${lib.dir}/IceGridGUI.jar" manifest="${lib.dir}/icegridgui.mf" basedir="${lib.dir}">
++        <jar jarfile="${lib.dir}/IceGridGUI.jar" basedir="${lib.dir}">
+             <include name="IceGridGUI/**"/>
+         </jar>
+         <jar jarfile="${lib.dir}/IceGridGUI.jar" basedir="resources" update="true">
+             <include name="icons/**"/>
+         </jar>
+-        <delete file="${lib.dir}/icegridgui.mf" />
+     </target>
+ 
+     <target name="icegridadmin-pro-jar" depends="ice-jar,icegridadmin-compile" if="build-icegridadmin-pro-jar" unless="ice.bin.dist">
+@@ -607,8 +601,6 @@
+     <target name="test" depends="test-compile, ice-compile"/>
+ 
+     <target name="all" depends="jar">
+-      <ant inheritAll="false" dir="test"/>
+-      <ant inheritAll="false" dir="demo"/>
+     </target>
+ 
+     <target name="install-common">
+diff -ur Ice-3.4.0.orig/java/config/build.properties Ice-3.4.0/java/config/build.properties
+--- Ice-3.4.0.orig/java/config/build.properties	2010-03-12 12:51:00.773391918 +0000
++++ Ice-3.4.0/java/config/build.properties	2010-03-12 12:54:29.169346467 +0000
+@@ -31,7 +31,7 @@
+ # These properties only need to be set if you want to build the
+ # standalone jar for the IceGrid GUI.
+ #
+-jgoodies.forms  = /usr/share/java/forms-1.2.1.jar
+-jgoodies.looks  = /usr/share/java/looks-2.3.0.jar
++jgoodies.forms  = /usr/share/java/jgoodies-forms.jar
++jgoodies.looks  = /usr/share/java/jgoodies-looks.jar
+ #jgoodies.forms = C:/Program\ Files/ZeroC/Ice-${ice.version}-ThirdParty/lib/forms-1.2.1.jar
+ #jgoodies.looks = C:/Program\ Files/ZeroC/Ice-${ice.version}-ThirdParty/lib/looks-2.3.0.jar
