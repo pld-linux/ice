@@ -52,9 +52,8 @@ BuildRequires:	java-jgoodies-looks
 %{?with_java_sun:BuildRequires:	java-sun}
 BuildRequires:	jpackage-utils
 BuildRequires:	rpm >= 4.4.9-56
-%endif
-# It is not possible to %%include conditionally, so BR: rpm-javaprov always
 BuildRequires:	rpm-javaprov
+%endif
 BuildRequires:	mcpp-devel
 %{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
 %{?with_python:BuildRequires:	rpm-pythonprov}
