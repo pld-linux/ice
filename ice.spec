@@ -114,7 +114,6 @@ The Ice runtime for C#
 Summary:	The Ice runtime for Ruby applications
 Group:		Development/Languages
 Requires:	%{name} = %{version}-%{release}
-Requires:	ruby-modules
 %{?ruby_mod_ver_requires_eq}
 
 %description -n ruby-%{name}
