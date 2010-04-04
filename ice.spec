@@ -1,6 +1,4 @@
 # TODO
-# - use our CC/CXX
-# - man pages tarball
 # - finish (pldize) -servers package
 #
 # Conditional build:
@@ -27,13 +25,17 @@ Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
 # Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
 Source1:	Ice-rpmbuild-%{version}.tar.gz
 # Source1-md5:	869cc60645e7e2b4115584a5ab17d1e9
-Source2:	%{name}gridgui
-Source3:	IceGridAdmin.desktop
+# Man pages courtesy of Francisco Moya's Debian packages
+Source2:	Ice-3.3.0-man-pages.tbz2
+# Source2-md5:	c6c17ee1be2e6b615af5b40edae88b75
+Source3:	%{name}gridgui
+Source4:	IceGridAdmin.desktop
 Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
 %{?with_gui:BuildRequires: ImageMagick}
+%{?with_java:BuildRequires:	ant-nodeps}
 BuildRequires:	db-cxx-devel
 %{?with_java:BuildRequires:	db-java-devel}
 %{?with_java:BuildRequires:	java-jgoodies-forms}
@@ -137,11 +139,14 @@ Requires:	%{name} = %{version}-%{release}
 The Ice runtime for PHP applications.
 
 %prep
-%setup -q -n Ice-%{version} -a 1
+%setup -q -n Ice-%{version} -a1 -a2
 %patch0 -p0
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+
+# no longer included in 3.4
+rm -f *man-pages/slice2docbook.1
 
 # Fix the encoding and line-endings of all the IceGridAdmin documentation files
 cd java/resources/IceGridAdmin
@@ -160,6 +165,9 @@ rm cpp/src/ca/ImportKey.class
 # update path to our install
 sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rpmbuild-%{version}/icegridregistry.conf
 
+# force our CC/CXX as build system compares for exactly "c++" to setup other rules
+sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
+
 %build
 # Compile the main Ice runtime
 # TODO: CC/CXX passing as make param breaks build system
@@ -170,6 +178,8 @@ javac cpp/src/ca/ImportKey.java
 %endif
 
 %{__make} -C cpp \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -187,6 +197,8 @@ rm temp*.png
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %{__make} -C java \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -194,6 +206,8 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with dotnet}
 %{__make} -C cs \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -201,6 +215,8 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with python}
 %{__make} -C py \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -208,6 +224,8 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with ruby}
 %{__make} -C rb \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -215,6 +233,8 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with php}
 %{__make} -C php \
+	CC="%{__cc}" \
+	CXX="%{__cxx}" \
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
@@ -237,6 +257,19 @@ mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
 mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || :
 
+mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
+mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
+
+# Move the license files into the documentation directory
+mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
+mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
+# Copy in the other files too
+cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
+
+# Copy the man pages into the correct directory
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+cp -a *man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
+
 %if %{with java}
 %{__make} -C java install \
 	prefix=$RPM_BUILD_ROOT
@@ -255,8 +288,8 @@ ln -s Freeze-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/Freeze.jar
 # Install the IceGrid GUI
 install -d $RPM_BUILD_ROOT{%{_pixmapsdir},%{_desktopdir}}
 mv $RPM_BUILD_ROOT/lib/IceGridGUI.jar $RPM_BUILD_ROOT%{_datadir}/Ice
-cp -a %{SOURCE3} $RPM_BUILD_ROOT%{_desktopdir}
-install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}
+cp -a %{SOURCE4} $RPM_BUILD_ROOT%{_desktopdir}
+install -p %{SOURCE3} $RPM_BUILD_ROOT%{_bindir}
 cp -a java/resources/icons/icegrid.png $RPM_BUILD_ROOT%{_pixmapsdir}
 mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 %endif
@@ -321,19 +354,6 @@ for i in icegridregistry icegridnode glacier2router; do
 done
 install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
 
-# Copy the man pages into the correct directory
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-#cp -a $RPM_BUILD_DIR/Ice-3.3.0-man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
-
-mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
-mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
-
-# Move the license files into the documentation directory
-mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
-mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
-# Copy in the other files too
-cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -366,6 +386,19 @@ fi
 %attr(755,root,root) %{_bindir}/icestormmigrate
 %attr(755,root,root) %{_bindir}/slice2html
 %attr(755,root,root) %{_bindir}/transformdb
+%{_mandir}/man1/dumpdb.1*
+%{_mandir}/man1/glacier2router.1*
+%{_mandir}/man1/icebox.1*
+%{_mandir}/man1/iceboxadmin.1*
+%{_mandir}/man1/icegridadmin.1*
+%{_mandir}/man1/icegridnode.1*
+%{_mandir}/man1/icegridregistry.1*
+%{_mandir}/man1/icepatch2calc.1*
+%{_mandir}/man1/icepatch2client.1*
+%{_mandir}/man1/icepatch2server.1*
+%{_mandir}/man1/icestormadmin.1*
+%{_mandir}/man1/slice2html.1*
+%{_mandir}/man1/transformdb.1*
 %attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
@@ -408,7 +441,7 @@ fi
 %doc %{_docdir}/Ice-%{version}/IceGridAdmin
 %attr(755,root,root) %{_bindir}/icegridgui
 %{_datadir}/Ice/IceGridGUI.jar
-#%{_mandir}/man1/icegridgui.1*
+%{_mandir}/man1/icegridgui.1*
 %{_desktopdir}/IceGridAdmin.desktop
 %{_pixmapsdir}/icegrid.png
 %endif
@@ -443,6 +476,8 @@ fi
 %{_includedir}/IceUtil
 %{_includedir}/IceXML
 %{_includedir}/Slice
+%{_mandir}/man1/slice2cpp.1*
+%{_mandir}/man1/slice2freeze.1*
 
 %if %{with dotnet}
 %{_pkgconfigdir}/Glacier2.pc
@@ -456,15 +491,20 @@ fi
 # as we do not have -devel for each binding, these are in main -devel
 # -csharp
 %attr(755,root,root) %{_bindir}/slice2cs
+%{_mandir}/man1/slice2cs.1*
 # -java
 %attr(755,root,root) %{_bindir}/slice2freezej
 %attr(755,root,root) %{_bindir}/slice2java
+%{_mandir}/man1/slice2freezej.1*
+%{_mandir}/man1/slice2java.1*
 # -php
 %attr(755,root,root) %{_bindir}/slice2php
 # -python
 %attr(755,root,root) %{_bindir}/slice2py
+%{_mandir}/man1/slice2py.1*
 # -ruby
 %attr(755,root,root) %{_bindir}/slice2rb
+%{_mandir}/man1/slice2rb.1*
 
 %files servers
 %defattr(644,root,root,755)
@@ -479,6 +519,7 @@ fi
 %files -n csharp-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/iceboxnet.exe
+%{_mandir}/man1/iceboxnet.exe.1*
 %{_libdir}/mono/Glacier2
 %{_libdir}/mono/Ice
 %{_libdir}/mono/IceBox
