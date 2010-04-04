@@ -58,18 +58,6 @@ protocol, asynchronous method invocation and dispatch, dynamic
 transport plug-ins, TCP/IP and UDP/IP support, SSL-based security, a
 firewall solution, and much more.
 
-%package servers
-Summary:	Ice services to run through /etc/rc.d/init.d
-Group:		Development/Tools
-Requires(post):	/sbin/chkconfig
-Requires(pre):	shadow-utils
-Requires(preun):	/sbin/chkconfig
-Requires(preun):	/sbin/service
-Requires:	%{name} = %{version}-%{release}
-
-%description servers
-Ice services to run through /etc/rc.d/init.d
-
 %package devel
 Summary:	Tools for developing Ice applications in C++
 Group:		Development/Libraries
@@ -81,103 +69,74 @@ Obsoletes:	Ice-devel
 %description devel
 Tools for developing Ice applications in C++.
 
-%package java
-Summary:	The Ice runtime for Java
-Group:		Libraries
+%package servers
+Summary:	Ice services to run through /etc/rc.d/init.d
+Group:		Development/Tools
+Requires(post,preun):	/sbin/chkconfig
 Requires:	%{name} = %{version}-%{release}
-Requires:	db4-java
-Requires:	java >= 1.5.0
+Requires:	rc-scripts
 
-%description java
+%description servers
+Ice services to run through /etc/rc.d/init.d
+
+%package -n icegrid-gui
+Summary:	IceGrid Admin Tool
+Group:		Development/Tools
+Requires:	%{name} = %{version}-%{release}
+Requires:	java-%{name} = %{version}-%{release}
+Requires:	java-jgoodies-forms
+Requires:	java-jgoodies-looks
+Requires:	jpackage-utils
+
+%description -n icegrid-gui
+Graphical administration tool for IceGrid
+
+%package -n java-%{name}
+Summary:	The Ice runtime for Java
+Group:		Libraries/Java
+Requires:	%{name} = %{version}-%{release}
+Requires:	db-java
+Requires:	jpackage-utils
+
+%description -n java-%{name}
 The Ice runtime for Java
 
-%package java-devel
-Summary:	Tools for developing Ice applications in Java
-Group:		Development/Tools
-Requires:	ice-java = %{version}-%{release}
-
-%description java-devel
-Tools for developing Ice applications in Java.
-
-%package csharp
-Summary:	IceGrid Admin Tool
+%package -n csharp-%{name}
 Summary:	The Ice runtime for C#
-Group:		Development/Tools
 Group:		Libraries
 Requires:	%{name} = %{version}-%{release}
-Requires:	%{name} = %{version}-%{release}
-Requires:	ice-java = %{version}-%{release}
-Requires:	java
-Requires:	jgoodies-forms
-Requires:	jgoodies-looks
-Requires:	jpackage-utils
-Requires:	mono-core >= 1.2.2
-Provides:	ice-dotnet = %{version}-%{release}
-Obsoletes:	ice-dotnet < %{version}-%{release}
+Requires:	mono >= 1.2.2
 
-%description csharp
+%description -n csharp-%{name}
 The Ice runtime for C#
 
-%package csharp-devel
-Summary:	Tools for developing Ice applications in C#
-Group:		Development/Tools
-Requires:	ice-csharp = %{version}-%{release}
-Requires:	pkgconfig
-
-%description csharp-devel
-Tools for developing Ice applications in C#.
-
-%package ruby
+%package -n ruby-%{name}
 Summary:	The Ice runtime for Ruby applications
-Group:		Development/Tools
-BuildRequires:	ruby-modules
+Group:		Development/Languages
 Requires:	%{name} = %{version}-%{release}
+Requires:	ruby-modules
 %{?ruby_mod_ver_requires_eq}
 
-%description ruby
+%description -n ruby-%{name}
 The Ice runtime for Ruby applications.
 
-%package ruby-devel
-Summary:	Tools for developing Ice applications in Ruby
-Group:		Development/Tools
-Requires:	ice-ruby = %{version}-%{release}
-
-%description ruby-devel
-Tools for developing Ice applications in Ruby.
-
-%package python
+%package -n python-%{name}
 Summary:	The Ice runtime for Python applications
-Group:		Development/Tools
+Group:		Development/Languages/Python
 Requires:	%{name} = %{version}-%{release}
-Requires:	python >= 2.3.4
+Requires:	python >= 1:2.3.4
 
-%description python
+%description -n python-%{name}
 The Ice runtime for Python applications.
 
-%package python-devel
-Summary:	Tools for developing Ice applications in Python
-Group:		Development/Tools
-Requires:	ice-python = %{version}-%{release}
-
-%description python-devel
-Tools for developing Ice applications in Python.
-
-%package php
+%package -n php-%{name}
 Summary:	The Ice runtime for PHP applications
-Group:		Libraries
+Group:		Development/Languages/PHP
 Requires:	%{name} = %{version}-%{release}
 %{?requires_php_extension}
 
-%description php
+%description -n php-%{name}
 The Ice runtime for PHP applications.
-
-%package php-devel
-Summary:	Tools for developing Ice applications in PHP
-Group:		Development/Tools
-Requires:	ice-php = %{version}-%{release}
-
-%description php-devel
-Tools for developing Ice applications in PHP.
 
 %prep
 %setup -q -n Ice-%{version} -a 1
@@ -384,10 +343,10 @@ rm -rf $RPM_BUILD_ROOT
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
 
-%post php
+%post -n php-%{name}
 %php_webserver_restart
 
-%postun php
+%postun -n php-%{name}
 if [ "$1" = 0 ]; then
 	%php_webserver_restart
 fi
@@ -511,7 +470,7 @@ fi
 %attr(754,root,root) /etc/rc.d/init.d/icegridnode
 %attr(754,root,root) /etc/rc.d/init.d/icegridregistry
 
-%files csharp
+%files -n csharp-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/iceboxnet.exe
 %{_libdir}/mono/Glacier2
@@ -527,7 +486,7 @@ fi
 %{_libdir}/mono/gac/IcePatch2
 %{_libdir}/mono/gac/IceStorm
 
-%files python
+%files -n python-%{name}
 %defattr(644,root,root,755)
 %{py_sitedir}/ice.pth
 %dir %{py_sitedir}/Ice
@@ -542,7 +501,7 @@ fi
 %{py_sitedir}/Ice/IceStorm/*.py[co]
 %attr(755,root,root) %{py_sitedir}/Ice/IcePy.so
 
-%files ruby
+%files -n ruby-%{name}
 %defattr(644,root,root,755)
 %{ruby_sitearchdir}/Glacier2.rb
 %{ruby_sitearchdir}/Glacier2
@@ -558,7 +517,7 @@ fi
 %{ruby_sitearchdir}/IceStorm/IceStorm.rb
 %attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so
 
-%files java
+%files -n java-%{name}
 %defattr(644,root,root,755)
 %{_javadir}/Freeze-%{version}.jar
 %{_javadir}/Freeze.jar
@@ -567,7 +526,7 @@ fi
 %{_javadir}/ant-ice-%{version}.jar
 %{_javadir}/ant-ice.jar
 
-%files php
+%files -n php-%{name}
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/ice.ini
 %attr(755,root,root) %{php_extensiondir}/IcePHP.so
