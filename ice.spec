@@ -14,7 +14,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	0.1
+Release:	0.2
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
@@ -28,6 +28,8 @@ URL:		http://www.zeroc.com/
 Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
+%{?with_python:BuildRequires:	rpm-pythonprov}
+%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
 Patch3:		jgoodies.patch
 BuildRequires:	db-cxx-devel
 %{?with_java:BuildRequires:	db-java-devel}
@@ -128,8 +130,9 @@ Tools for developing Ice applications in C#.
 %package ruby
 Summary:	The Ice runtime for Ruby applications
 Group:		Development/Tools
+BuildRequires:	ruby-modules
 Requires:	%{name} = %{version}-%{release}
-Requires:	ruby(abi) = 1.8
+%{?ruby_mod_ver_requires_eq}
 
 %description ruby
 The Ice runtime for Ruby applications.
@@ -338,6 +341,9 @@ done
 install -d $RPM_BUILD_ROOT%{py_sitedir}/Ice
 mv $RPM_BUILD_ROOT/python/* $RPM_BUILD_ROOT%{py_sitedir}/Ice
 cp -a Ice-rpmbuild-%{version}/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
+%py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
+%py_comp $RPM_BUILD_ROOT%{py_sitedir}
+%py_postclean
 %endif
 
 %if %{with ruby}
@@ -348,12 +354,10 @@ mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_sitearchdir}
 
 %if %{with php}
 # Put the PHP stuff into the right place
-install -d $RPM_BUILD_ROOT%{_sysconfdir}/php.d
-mv $RPM_BUILD_ROOT/ice.ini $RPM_BUILD_ROOT%{_sysconfdir}/php.d
-install -d $RPM_BUILD_ROOT%{php_extdir}
-mv $RPM_BUILD_ROOT/php/IcePHP.so $RPM_BUILD_ROOT%{php_extdir}
-install -d $RPM_BUILD_ROOT%{_datadir}/php
-mv $RPM_BUILD_ROOT/php/* $RPM_BUILD_ROOT%{_datadir}/php
+install -d $RPM_BUILD_ROOT{%{php_sysconfdir}/conf.d,%{php_extensiondir},%{php_data_dir}}
+mv $RPM_BUILD_ROOT/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
+mv $RPM_BUILD_ROOT/php/IcePHP.so $RPM_BUILD_ROOT%{php_extensiondir}
+mv $RPM_BUILD_ROOT/php/* $RPM_BUILD_ROOT%{php_data_dir}
 %endif
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
@@ -375,6 +379,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
+
+%post php
+%php_webserver_restart
+
+%postun php
+if [ "$1" = 0 ]; then
+	%php_webserver_restart
+fi
 
 %files
 %defattr(644,root,root,755)
@@ -401,37 +413,45 @@ rm -rf $RPM_BUILD_ROOT
 %attr(755,root,root) %{_bindir}/slice2py
 %attr(755,root,root) %{_bindir}/slice2rb
 %attr(755,root,root) %{_bindir}/transformdb
-%attr(755,root,root) %{_libdir}/libFreeze.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libFreeze.so.34
-%attr(755,root,root) %{_libdir}/libGlacier2.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libGlacier2.so.34
-%attr(755,root,root) %{_libdir}/libIce.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIce.so.34
-%attr(755,root,root) %{_libdir}/libIceBox.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceBox.so.34
-%attr(755,root,root) %{_libdir}/libIceDB.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceDB.so.34
-%attr(755,root,root) %{_libdir}/libIceGrid.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceGrid.so.34
-%attr(755,root,root) %{_libdir}/libIceGridFreezeDB.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceGridFreezeDB.so.34
-%attr(755,root,root) %{_libdir}/libIcePatch2.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIcePatch2.so.34
-%attr(755,root,root) %{_libdir}/libIceSSL.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceSSL.so.34
-%attr(755,root,root) %{_libdir}/libIceStorm.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceStorm.so.34
-%attr(755,root,root) %{_libdir}/libIceStormFreezeDB.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceStormFreezeDB.so.34
-%attr(755,root,root) %{_libdir}/libIceStormService.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceStormService.so.34
-%attr(755,root,root) %{_libdir}/libIceUtil.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceUtil.so.34
-%attr(755,root,root) %{_libdir}/libIceXML.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libIceXML.so.34
-%attr(755,root,root) %{_libdir}/libSlice.so.3.4.0
-%attr(755,root,root) %ghost %{_libdir}/libSlice.so.34
+%attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libGlacier2.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIce.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIce.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceBox.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceBox.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceDB.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceDB.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceGrid.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceGrid.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceGridFreezeDB.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceGridFreezeDB.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIcePatch2.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIcePatch2.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceSSL.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceSSL.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceStorm.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceStorm.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceStormFreezeDB.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceStormFreezeDB.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceStormService.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceStormService.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceUtil.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceUtil.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceXML.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceXML.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libSlice.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libSlice.so.%{soversion}
 %{_datadir}/Ice
+
+# XXX gui
+%attr(755,root,root) %{_bindir}/icegridgui
+%{_desktopdir}/IceGridAdmin.desktop
+%{_iconsdir}/hicolor/*/apps/icegrid.png
+
+# XXX doc
+%doc %{_docdir}/Ice-%{version}
 
 %files devel
 %defattr(644,root,root,755)
@@ -461,3 +481,98 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/IceUtil
 %{_includedir}/IceXML
 %{_includedir}/Slice
+%{_pkgconfigdir}/Glacier2.pc
+%{_pkgconfigdir}/Ice.pc
+%{_pkgconfigdir}/IceBox.pc
+%{_pkgconfigdir}/IceGrid.pc
+%{_pkgconfigdir}/IcePatch2.pc
+%{_pkgconfigdir}/IceStorm.pc
+
+%files servers
+%defattr(644,root,root,755)
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/glacier2router.conf
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/icegridnode.conf
+%config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/icegridregistry.conf
+%attr(754,root,root) /etc/rc.d/init.d/glacier2router
+%attr(754,root,root) /etc/rc.d/init.d/icegridnode
+%attr(754,root,root) /etc/rc.d/init.d/icegridregistry
+
+%files csharp
+%defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/iceboxnet.exe
+%{_libdir}/mono/Glacier2
+%{_libdir}/mono/Ice
+%{_libdir}/mono/IceBox
+%{_libdir}/mono/IceGrid
+%{_libdir}/mono/IcePatch2
+%{_libdir}/mono/IceStorm
+%{_libdir}/mono/gac/Glacier2
+%{_libdir}/mono/gac/Ice
+%{_libdir}/mono/gac/IceBox
+%{_libdir}/mono/gac/IceGrid
+%{_libdir}/mono/gac/IcePatch2
+%{_libdir}/mono/gac/IceStorm
+
+%files python
+%defattr(644,root,root,755)
+%{py_sitedir}/ice.pth
+%dir %{py_sitedir}/Ice
+%dir %{py_sitedir}/Ice/IceBox
+%dir %{py_sitedir}/Ice/IceGrid
+%dir %{py_sitedir}/Ice/IcePatch2
+%dir %{py_sitedir}/Ice/IceStorm
+%{py_sitedir}/Ice/*.py[co]
+%{py_sitedir}/Ice/IceBox/*.py[co]
+%{py_sitedir}/Ice/IceGrid/*.py[co]
+%{py_sitedir}/Ice/IcePatch2/*.py[co]
+%{py_sitedir}/Ice/IceStorm/*.py[co]
+# XXX: mv to use just ".so"-ext?
+%{py_sitedir}/Ice/IcePy.so
+%{py_sitedir}/Ice/IcePy.so.*.*.*
+%attr(755,root,root) %{py_sitedir}/Ice/IcePy.so.%{soversion}
+
+%files ruby
+%defattr(644,root,root,755)
+%{ruby_sitearchdir}/Glacier2.rb
+%{ruby_sitearchdir}/Glacier2
+%{ruby_sitearchdir}/Ice.rb
+%{ruby_sitearchdir}/Ice
+%{ruby_sitearchdir}/IceBox.rb
+%{ruby_sitearchdir}/IceBox
+%{ruby_sitearchdir}/IceGrid.rb
+%{ruby_sitearchdir}/IceGrid
+%{ruby_sitearchdir}/IcePatch2.rb
+%{ruby_sitearchdir}/IcePatch2
+%{ruby_sitearchdir}/IceStorm.rb
+%{ruby_sitearchdir}/IceStorm/IceStorm.rb
+
+# XXX: mv to use just ".so"-ext?
+%{ruby_sitearchdir}/IceRuby.so
+%{ruby_sitearchdir}/IceRuby.so.*.*.*
+%attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so.%{soversion}
+
+%files java
+%defattr(644,root,root,755)
+%{_javadir}/Freeze-%{version}.jar
+%{_javadir}/Freeze.jar
+%{_javadir}/Ice-%{version}.jar
+%{_javadir}/Ice.jar
+%{_javadir}/ant-ice-%{version}.jar
+%{_javadir}/ant-ice.jar
+
+%files php
+%defattr(644,root,root,755)
+%config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/ice.ini
+%attr(755,root,root) %{php_extensiondir}/IcePHP.so
+%{php_data_dir}/Glacier2.php
+%{php_data_dir}/Glacier2
+%{php_data_dir}/Ice.php
+%{php_data_dir}/Ice
+%{php_data_dir}/IceBox.php
+%{php_data_dir}/IceBox
+%{php_data_dir}/IceGrid.php
+%{php_data_dir}/IceGrid
+%{php_data_dir}/IcePatch2.php
+%{php_data_dir}/IcePatch2
+%{php_data_dir}/IceStorm.php
+%{php_data_dir}/IceStorm
