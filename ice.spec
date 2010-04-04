@@ -19,8 +19,7 @@
 %undefine	with_gui
 %endif
 
-%include	/usr/lib/rpm/macros.java
-
+%{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
