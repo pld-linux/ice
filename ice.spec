@@ -1,7 +1,7 @@
 # TODO
-# - get stuff from fc spec
-# - cc/cflags
-# - language bindings
+# - use our CC/CXX
+# - man pages tarball
+# - ImportKey.class is part of main pkg, thus needs javac
 #
 # Conditional build:
 %bcond_without	java		# Java bindings
@@ -11,10 +11,14 @@
 %bcond_without	php			# PHP bindings
 %bcond_without	gui			# IceGrid GUI
 
+%if %{without java}
+%undefine	with_gui
+%endif
+
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	0.2
+Release:	0.4
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
@@ -144,8 +148,21 @@ The Ice runtime for PHP applications.
 %patch2 -p1
 %patch3 -p1
 
-%build
+# Fix the encoding and line-endings of all the IceGridAdmin documentation files
+cd java/resources/IceGridAdmin
+%undos *.js *.css
+for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html.js zoom_pageinfo.js; do
+	iconv -f ISO88591 -t UTF8 $f -o $f.tmp
+	mv $f.tmp $f
+done
+cd -
 
+rm cpp/src/ca/ImportKey.class
+
+# update path to our install
+sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/bin/iceca cpp/src/ca/iceca icegridregistry.conf
+
+%build
 # Compile the main Ice runtime
 # TODO: CC/CXX passing as make param breaks build system
 %{__make} -C cpp \
@@ -154,14 +171,11 @@ The Ice runtime for PHP applications.
 	embedded_runpath_prefix=""
 
 %if %{with java}
+# Rebuild the Java ImportKey class
+javac cpp/src/ca/ImportKey.java
+
 # Set the CLASSPATH correctly for the Java compile
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
-
-# Rebuild the Java ImportKey class
-cd cpp/src/ca
-rm *.class
-javac ImportKey.java
-cd -
 
 %{__make} -C java \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -209,18 +223,26 @@ cd -
 rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_docdir}/Ice-%{version},%{_datadir}/Ice}
 
-%{__make} install \
-	prefix=$RPM_BUILD_ROOT \
-	GACINSTALL=yes \
-	GAC_ROOT=$RPM_BUILD_ROOT%{_libdir} \
-	embedded_runpath_prefix=""
+%{__make} -C cpp install \
+	prefix=$RPM_BUILD_ROOT
+
+install -d $RPM_BUILD_ROOT%{_bindir}
+mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
+install -d $RPM_BUILD_ROOT%{_includedir}
+mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
+install -d $RPM_BUILD_ROOT%{_libdir}
+# There are a couple of files that end up installed in /lib, not %{_libdir},
+# so we try this move too.
+mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
+mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || true
+
+# Move the ImportKey.class file
+mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 
 %if %{with java}
 %{__make} -C java install \
-	prefix=$RPM_BUILD_ROOT \
-	GACINSTALL=yes \
-	GAC_ROOT=$RPM_BUILD_ROOT%{_libdir} \
-	embedded_runpath_prefix=""
+	prefix=$RPM_BUILD_ROOT
+
 # Move Java stuff where it should be
 install -d $RPM_BUILD_ROOT%{_javadir}
 mv $RPM_BUILD_ROOT/lib/ant-ice.jar $RPM_BUILD_ROOT%{_javadir}/ant-ice-%{version}.jar
@@ -241,60 +263,28 @@ install -d $RPM_BUILD_ROOT%{_bindir}
 install -p %{SOURCE2} $RPM_BUILD_ROOT%{_bindir}
 install -d $RPM_BUILD_ROOT%{_desktopdir}
 cp -a %{SOURCE3} $RPM_BUILD_ROOT%{_desktopdir}
+mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 %endif
 
-# Move other rpm-specific files into the right place (README, service stuff)
-cp -a Ice-rpmbuild-%{version}/ice.ini $RPM_BUILD_ROOT/ice.ini
-
-# Install the servers
-install -d $RPM_BUILD_ROOT%{_sysconfdir}
-cp -a Ice-rpmbuild-%{version}/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
-install -d $RPM_BUILD_ROOT%{_initrddir}
-for i in icegridregistry icegridnode glacier2router; do
-	cp -a Ice-rpmbuild-%{version}/$i.redhat $RPM_BUILD_ROOT%{_initrddir}/$i
-done
-install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
-
-# "make install" assumes it's going into a directory under /opt.
-# Move things to where they should be in an RPM setting (adapted from
-# the original ZeroC srpm).
-install -d $RPM_BUILD_ROOT%{_bindir}
-mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
-install -d $RPM_BUILD_ROOT%{_includedir}
-mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
-install -d $RPM_BUILD_ROOT%{_libdir}
-# There are a couple of files that end up installed in /lib, not %{_libdir},
-# so we try this move too.
-mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
-mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || true
-mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
-
-# Copy the man pages into the correct directory
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-#cp -a $RPM_BUILD_DIR/Ice-3.3.0-man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
-
-# Fix the encoding and line-endings of all the IceGridAdmin documentation files
-cd $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/IceGridAdmin
-chmod a-x *
-for f in *.js *.css; do
-	dos2unix $f
-done
-for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html.js zoom_pageinfo.js; do
-	iconv -f ISO88591 -t UTF8 $f -o $f.tmp
-	mv $f.tmp $f
-done
-cd -
-
 %if %{with dotnet}
+install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
+%{__make} -C cs install \
+	prefix=$RPM_BUILD_ROOT \
+	GACINSTALL=yes \
+	GAC_ROOT=$RPM_BUILD_ROOT%{_libdir} \
+
 # .NET spec files (for csharp-devel) -- convert the paths
 for f in IceGrid Glacier2 IceBox Ice IceStorm IcePatch2; do
-	sed -i -e "s#/lib/#%{_libdir}/#" $RPM_BUILD_ROOT%{_libdir}/pkgconfig/$f.pc
-	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT%{_libdir}/pkgconfig/$f.pc
-	mv $RPM_BUILD_ROOT%{_bindir}/$f.xml $RPM_BUILD_ROOT%{_libdir}/mono/gac/$f/%{version}.*/
+	sed -i -e "s#/lib/#%{_libdir}/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
+	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
+	mv $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc $RPM_BUILD_ROOT%{_pkgconfigdir}/$f.pc
+	mv $RPM_BUILD_ROOT/bin/$f.xml $RPM_BUILD_ROOT%{_libdir}/mono/gac/$f/%{version}.*/
 done
 %endif
 
 %if %{with python}
+%{__make} -C py install \
+	prefix=$RPM_BUILD_ROOT
 %{__sed} -i -e '1s,/usr/bin/env python,%{__python},' $RPM_BUILD_ROOT/python/Ice.py
 install -d $RPM_BUILD_ROOT%{py_sitedir}/Ice
 mv $RPM_BUILD_ROOT/python/IcePy.so.*.*.* $RPM_BUILD_ROOT%{py_sitedir}/Ice/IcePy.so
@@ -307,6 +297,8 @@ cp -a Ice-rpmbuild-%{version}/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %endif
 
 %if %{with ruby}
+%{__make} -C rb install \
+	prefix=$RPM_BUILD_ROOT
 %{__sed} -i -e '1s,/usr/bin/env ruby,%{__ruby},' $RPM_BUILD_ROOT/ruby/*.rb
 install -d $RPM_BUILD_ROOT%{ruby_sitearchdir}
 mv $RPM_BUILD_ROOT/ruby/IceRuby.so.*.*.* $RPM_BUILD_ROOT%{ruby_sitearchdir}/IceRuby.so
@@ -315,20 +307,32 @@ mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_sitearchdir}
 %endif
 
 %if %{with php}
+%{__make} -C php install \
+	prefix=$RPM_BUILD_ROOT
 # Put the PHP stuff into the right place
 install -d $RPM_BUILD_ROOT{%{php_sysconfdir}/conf.d,%{php_extensiondir},%{php_data_dir}}
-mv $RPM_BUILD_ROOT/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
+cp -a Ice-rpmbuild-%{version}/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
 mv $RPM_BUILD_ROOT/php/IcePHP.so $RPM_BUILD_ROOT%{php_extensiondir}
 mv $RPM_BUILD_ROOT/php/* $RPM_BUILD_ROOT%{php_data_dir}
 %endif
+
+# Install the servers
+install -d $RPM_BUILD_ROOT%{_sysconfdir}
+cp -a Ice-rpmbuild-%{version}/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
+install -d $RPM_BUILD_ROOT%{_initrddir}
+for i in icegridregistry icegridnode glacier2router; do
+	cp -a Ice-rpmbuild-%{version}/$i.redhat $RPM_BUILD_ROOT%{_initrddir}/$i
+done
+install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
+
+# Copy the man pages into the correct directory
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+#cp -a $RPM_BUILD_DIR/Ice-3.3.0-man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
 # Somehow, some files under "slice" end up with executable permissions -- ??
 find $RPM_BUILD_ROOT%{_datadir}/Ice -name "*.ice" | xargs chmod a-x
-
-# Move the ImportKey.class file -- it'll be in %{_libdir} because of the moves earlier
-mv $RPM_BUILD_ROOT%{_libdir}/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 
 # Move the license files into the documentation directory
 mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
@@ -400,9 +404,11 @@ fi
 %{_datadir}/Ice
 
 # XXX gui
+%if %{with gui}
 %attr(755,root,root) %{_bindir}/icegridgui
 %{_desktopdir}/IceGridAdmin.desktop
 %{_iconsdir}/hicolor/*/apps/icegrid.png
+%endif
 
 # XXX doc
 %doc %{_docdir}/Ice-%{version}
@@ -438,14 +444,14 @@ fi
 %{_includedir}/IceXML
 %{_includedir}/Slice
 
-# these pkgconfig files are for csharp, but we do not have separate -devel for csharp
+%if %{with dotnet}
 %{_pkgconfigdir}/Glacier2.pc
 %{_pkgconfigdir}/Ice.pc
 %{_pkgconfigdir}/IceBox.pc
 %{_pkgconfigdir}/IceGrid.pc
 %{_pkgconfigdir}/IcePatch2.pc
 %{_pkgconfigdir}/IceStorm.pc
-
+%endif
 
 # as we do not have -devel for each binding, these are in main -devel
 # -csharp
@@ -469,6 +475,7 @@ fi
 %attr(754,root,root) /etc/rc.d/init.d/icegridnode
 %attr(754,root,root) /etc/rc.d/init.d/icegridregistry
 
+%if %{with dotnet}
 %files -n csharp-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/iceboxnet.exe
@@ -484,7 +491,9 @@ fi
 %{_libdir}/mono/gac/IceGrid
 %{_libdir}/mono/gac/IcePatch2
 %{_libdir}/mono/gac/IceStorm
+%endif
 
+%if %{with python}
 %files -n python-%{name}
 %defattr(644,root,root,755)
 %{py_sitedir}/ice.pth
@@ -499,7 +508,9 @@ fi
 %{py_sitedir}/Ice/IcePatch2/*.py[co]
 %{py_sitedir}/Ice/IceStorm/*.py[co]
 %attr(755,root,root) %{py_sitedir}/Ice/IcePy.so
+%endif
 
+%if %{with ruby}
 %files -n ruby-%{name}
 %defattr(644,root,root,755)
 %{ruby_sitearchdir}/Glacier2.rb
@@ -515,7 +526,9 @@ fi
 %{ruby_sitearchdir}/IceStorm.rb
 %{ruby_sitearchdir}/IceStorm/IceStorm.rb
 %attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so
+%endif
 
+%if %{with java}
 %files -n java-%{name}
 %defattr(644,root,root,755)
 %{_javadir}/Freeze-%{version}.jar
@@ -524,7 +537,9 @@ fi
 %{_javadir}/Ice.jar
 %{_javadir}/ant-ice-%{version}.jar
 %{_javadir}/ant-ice.jar
+%endif
 
+%if %{with php}
 %files -n php-%{name}
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/ice.ini
@@ -541,3 +556,4 @@ fi
 %{php_data_dir}/IcePatch2
 %{php_data_dir}/IceStorm.php
 %{php_data_dir}/IceStorm
+%endif
