@@ -339,6 +339,8 @@ done
 %if %{with python}
 %{__sed} -i -e '1s,/usr/bin/env python,%{__python},' $RPM_BUILD_ROOT/python/Ice.py
 install -d $RPM_BUILD_ROOT%{py_sitedir}/Ice
+mv $RPM_BUILD_ROOT/python/IcePy.so.*.*.* $RPM_BUILD_ROOT%{py_sitedir}/Ice/IcePy.so
+rm -f $RPM_BUILD_ROOT/python/IcePy.so*
 mv $RPM_BUILD_ROOT/python/* $RPM_BUILD_ROOT%{py_sitedir}/Ice
 cp -a Ice-rpmbuild-%{version}/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
@@ -349,6 +351,8 @@ cp -a Ice-rpmbuild-%{version}/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %if %{with ruby}
 %{__sed} -i -e '1s,/usr/bin/env ruby,%{__ruby},' $RPM_BUILD_ROOT/ruby/*.rb
 install -d $RPM_BUILD_ROOT%{ruby_sitearchdir}
+mv $RPM_BUILD_ROOT/ruby/IceRuby.so.*.*.* $RPM_BUILD_ROOT%{ruby_sitearchdir}/IceRuby.so
+rm -f $RPM_BUILD_ROOT/ruby/IceRuby.so*
 mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_sitearchdir}
 %endif
 
@@ -403,16 +407,8 @@ fi
 %attr(755,root,root) %{_bindir}/icepatch2server
 %attr(755,root,root) %{_bindir}/icestormadmin
 %attr(755,root,root) %{_bindir}/icestormmigrate
-%attr(755,root,root) %{_bindir}/slice2cpp
-%attr(755,root,root) %{_bindir}/slice2cs
-%attr(755,root,root) %{_bindir}/slice2freeze
-%attr(755,root,root) %{_bindir}/slice2freezej
-%attr(755,root,root) %{_bindir}/slice2html
-%attr(755,root,root) %{_bindir}/slice2java
-%attr(755,root,root) %{_bindir}/slice2php
-%attr(755,root,root) %{_bindir}/slice2py
-%attr(755,root,root) %{_bindir}/slice2rb
 %attr(755,root,root) %{_bindir}/transformdb
+%attr(755,root,root) %{_bindir}/slice2html
 %attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
@@ -455,6 +451,8 @@ fi
 
 %files devel
 %defattr(644,root,root,755)
+%attr(755,root,root) %{_bindir}/slice2cpp
+%attr(755,root,root) %{_bindir}/slice2freeze
 %attr(755,root,root) %{_libdir}/libFreeze.so
 %attr(755,root,root) %{_libdir}/libGlacier2.so
 %attr(755,root,root) %{_libdir}/libIce.so
@@ -481,12 +479,28 @@ fi
 %{_includedir}/IceUtil
 %{_includedir}/IceXML
 %{_includedir}/Slice
+
+# these pkgconfig files are for csharp, but we do not have separate -devel for csharp
 %{_pkgconfigdir}/Glacier2.pc
 %{_pkgconfigdir}/Ice.pc
 %{_pkgconfigdir}/IceBox.pc
 %{_pkgconfigdir}/IceGrid.pc
 %{_pkgconfigdir}/IcePatch2.pc
 %{_pkgconfigdir}/IceStorm.pc
+
+
+# as we do not have -devel for each binding, these are in main -devel
+# -csharp
+%attr(755,root,root) %{_bindir}/slice2cs
+# -java
+%attr(755,root,root) %{_bindir}/slice2freezej
+%attr(755,root,root) %{_bindir}/slice2java
+# -php
+%attr(755,root,root) %{_bindir}/slice2php
+# -python
+%attr(755,root,root) %{_bindir}/slice2py
+# -ruby
+%attr(755,root,root) %{_bindir}/slice2rb
 
 %files servers
 %defattr(644,root,root,755)
@@ -526,10 +540,7 @@ fi
 %{py_sitedir}/Ice/IceGrid/*.py[co]
 %{py_sitedir}/Ice/IcePatch2/*.py[co]
 %{py_sitedir}/Ice/IceStorm/*.py[co]
-# XXX: mv to use just ".so"-ext?
-%{py_sitedir}/Ice/IcePy.so
-%{py_sitedir}/Ice/IcePy.so.*.*.*
-%attr(755,root,root) %{py_sitedir}/Ice/IcePy.so.%{soversion}
+%attr(755,root,root) %{py_sitedir}/Ice/IcePy.so
 
 %files ruby
 %defattr(644,root,root,755)
@@ -545,11 +556,7 @@ fi
 %{ruby_sitearchdir}/IcePatch2
 %{ruby_sitearchdir}/IceStorm.rb
 %{ruby_sitearchdir}/IceStorm/IceStorm.rb
-
-# XXX: mv to use just ".so"-ext?
-%{ruby_sitearchdir}/IceRuby.so
-%{ruby_sitearchdir}/IceRuby.so.*.*.*
-%attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so.%{soversion}
+%attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so
 
 %files java
 %defattr(644,root,root,755)
