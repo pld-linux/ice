@@ -9,9 +9,17 @@
 %bcond_without	php			# PHP bindings
 %bcond_without	gui			# IceGrid GUI
 
+%if "%{pld_release}" == "ti"
+%bcond_without	java_sun	# build with gcj
+%else
+%bcond_with	java_sun	# build with java-sun
+%endif
+
 %if %{without java}
 %undefine	with_gui
 %endif
+
+%include	/usr/lib/rpm/macros.java
 
 Summary:	The Ice base runtime and services
 Name:		ice
@@ -35,15 +43,23 @@ Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
 %{?with_gui:BuildRequires: ImageMagick}
-%{?with_java:BuildRequires:	ant-nodeps}
 BuildRequires:	db-cxx-devel
-%{?with_java:BuildRequires:	db-java-devel}
-%{?with_java:BuildRequires:	java-jgoodies-forms}
-%{?with_java:BuildRequires:	java-jgoodies-looks}
+%if %{with java}
+BuildRequires:	ant-nodeps
+BuildRequires:	db-java-devel
+%{!?with_java_sun:BuildRequires:	java-gcj-compat-devel}
+BuildRequires:	java-jgoodies-forms
+BuildRequires:	java-jgoodies-looks
+%{?with_java_sun:BuildRequires:	java-sun}
+BuildRequires:	jpackage-utils
+BuildRequires:	rpm >= 4.4.9-56
+%endif
+# It is not possible to %%include conditionally, so BR: rpm-javaprov always
+BuildRequires:	rpm-javaprov
 BuildRequires:	mcpp-devel
 %{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
 %{?with_python:BuildRequires:	rpm-pythonprov}
-BuildRequires:	rpmbuild(macros) >= 1.519
+BuildRequires:	rpmbuild(macros) >= 1.533
 %{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
 # Ice doesn't officially support ppc64 at all; sparc64 doesnt have mono
 ExcludeArch:	ppc64 sparc64
