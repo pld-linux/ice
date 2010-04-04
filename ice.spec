@@ -431,11 +431,11 @@ fi
 %attr(755,root,root) %ghost %{_libdir}/libSlice.so.%{soversion}
 %{_datadir}/Ice
 
+%if %{with gui}
 # Exclude the stuff that's in IceGrid
 %exclude %{_docdir}/Ice-%{version}/IceGridAdmin
 %exclude %{_datadir}/Ice/IceGridGUI.jar
 
-%if %{with gui}
 %files -n icegrid-gui
 %defattr(644,root,root,755)
 %doc %{_docdir}/Ice-%{version}/IceGridAdmin
