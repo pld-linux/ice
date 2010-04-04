@@ -16,7 +16,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	0.5
+Release:	0.6
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -250,21 +250,11 @@ install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_includedir},%{_docdir}/Ice-%
 
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
+mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
 # Move the ImportKey.class file
 mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
-# There are a couple of files that end up installed in /lib, not %{_libdir},
-# so we try this move too.
-mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
-mv $RPM_BUILD_ROOT/lib/* $RPM_BUILD_ROOT%{_libdir} || :
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
-mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
-
-# Move the license files into the documentation directory
-mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
-mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
-# Copy in the other files too
-cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 # Copy the man pages into the correct directory
 install -d $RPM_BUILD_ROOT%{_mandir}/man1
@@ -344,6 +334,15 @@ cp -a Ice-rpmbuild-%{version}/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
 mv $RPM_BUILD_ROOT/php/IcePHP.so $RPM_BUILD_ROOT%{php_extensiondir}
 mv $RPM_BUILD_ROOT/php/* $RPM_BUILD_ROOT%{php_data_dir}
 %endif
+
+# move as last, bindings reinstall these if missing
+mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
+
+# Move the license files into the documentation directory
+mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
+mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
+# Copy in the other files too
+cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 # Install the servers
 install -d $RPM_BUILD_ROOT%{_sysconfdir}
