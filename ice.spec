@@ -281,12 +281,16 @@ cp -a *man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
 
 # Move Java stuff where it should be
 install -d $RPM_BUILD_ROOT%{_javadir}
-mv $RPM_BUILD_ROOT/lib/ant-ice.jar $RPM_BUILD_ROOT%{_javadir}/ant-ice-%{version}.jar
-ln -s ant-ice-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/ant-ice.jar
 mv $RPM_BUILD_ROOT/lib/Ice.jar $RPM_BUILD_ROOT%{_javadir}/Ice-%{version}.jar
 ln -s Ice-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/Ice.jar
 mv $RPM_BUILD_ROOT/lib/Freeze.jar $RPM_BUILD_ROOT%{_javadir}/Freeze-%{version}.jar
 ln -s Freeze-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/Freeze.jar
+
+# Register ant target
+install -d $RPM_BUILD_ROOT{%{_sysconfdir}/ant.d,%{_javadir}/ant}
+mv $RPM_BUILD_ROOT/lib/ant-ice.jar $RPM_BUILD_ROOT%{_javadir}/ant/ant-ice-%{version}.jar
+ln -s ant-ice-%{version}.jar $RPM_BUILD_ROOT%{_javadir}/ant/ant-ice.jar
+echo 'ice ant/ant-ice' > $RPM_BUILD_ROOT%{_sysconfdir}/ant.d/ice
 %endif
 
 %if %{with gui}
@@ -492,6 +496,11 @@ fi
 %{_includedir}/Slice
 %{_mandir}/man1/slice2cpp.1*
 %{_mandir}/man1/slice2freeze.1*
+%if %{with java}
+%{_sysconfdir}/ant.d/ant
+%{_javadir}/ant/ant-ice-%{version}.jar
+%{_javadir}/ant/ant-ice.jar
+%endif
 
 %if %{with dotnet}
 %{_pkgconfigdir}/Glacier2.pc
@@ -590,8 +599,6 @@ fi
 %{_javadir}/Freeze.jar
 %{_javadir}/Ice-%{version}.jar
 %{_javadir}/Ice.jar
-%{_javadir}/ant-ice-%{version}.jar
-%{_javadir}/ant-ice.jar
 %endif
 
 %if %{with php}
