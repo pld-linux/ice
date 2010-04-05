@@ -23,7 +23,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	0.6
+Release:	1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
