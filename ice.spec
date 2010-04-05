@@ -171,6 +171,8 @@ for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html
 done
 cd -
 
+%{__sed} -i -e '1s,/usr/bin/env python,%{__python},' cpp/src/ca/iceca
+
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
 rm cpp/src/ca/ImportKey.class
@@ -262,11 +264,12 @@ install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_includedir},%{_docdir}/Ice-%
 %{__make} -C cpp install \
 	prefix=$RPM_BUILD_ROOT
 
+# Move the ImportKey.class file
+mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
+
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
 mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
-# Move the ImportKey.class file
-mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 
