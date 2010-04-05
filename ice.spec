@@ -496,7 +496,7 @@ fi
 %{_mandir}/man1/slice2cpp.1*
 %{_mandir}/man1/slice2freeze.1*
 %if %{with java}
-%{_sysconfdir}/ant.d/ant
+%{_sysconfdir}/ant.d/ice
 %{_javadir}/ant/ant-ice-%{version}.jar
 %{_javadir}/ant/ant-ice.jar
 %endif
