@@ -42,7 +42,10 @@ Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
 %{?with_gui:BuildRequires: ImageMagick}
+%{?with_gui:BuildRequires: ImageMagick-coder-png}
+BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
+BuildRequires:	expat-devel
 %if %{with java}
 BuildRequires:	ant-nodeps
 BuildRequires:	db-java-devel
@@ -55,10 +58,14 @@ BuildRequires:	rpm >= 4.4.9-56
 BuildRequires:	rpm-javaprov
 %endif
 BuildRequires:	mcpp-devel
+BuildRequires:	mono-csharp
+BuildRequires:	openssl-devel
 %{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
+BuildRequires:	python-devel
 %{?with_python:BuildRequires:	rpm-pythonprov}
 BuildRequires:	rpmbuild(macros) >= 1.533
 %{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
+BuildRequires:	ruby-devel
 # Ice doesn't officially support ppc64 at all; sparc64 doesnt have mono
 ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
