@@ -2,12 +2,12 @@
 # - finish (pldize) -servers package
 #
 # Conditional build:
-%bcond_without	java		# Java bindings
+%bcond_without	gui			# IceGrid GUI
 %bcond_without	dotnet		# .NET bindings
+%bcond_without	java		# Java bindings
+%bcond_without	php			# PHP bindings
 %bcond_without	python		# Python bindings
 %bcond_without	ruby		# Ruby bindings
-%bcond_without	php			# PHP bindings
-%bcond_without	gui			# IceGrid GUI
 
 %if "%{pld_release}" == "ti"
 %bcond_without	java_sun	# build with gcj
@@ -41,11 +41,20 @@ Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
-%{?with_gui:BuildRequires: ImageMagick}
-%{?with_gui:BuildRequires: ImageMagick-coder-png}
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
+BuildRequires:	mcpp-devel
+BuildRequires:	openssl-devel
+BuildRequires:	rpm >= 4.4.9-56
+BuildRequires:	rpmbuild(macros) >= 1.533
+%if %{with gui}
+BuildRequires:	ImageMagick
+BuildRequires:	ImageMagick-coder-png
+%endif
+%if %{with dotnet}
+BuildRequires:	mono-csharp
+%endif
 %if %{with java}
 BuildRequires:	ant-nodeps
 BuildRequires:	db-java-devel
@@ -54,18 +63,19 @@ BuildRequires:	java-jgoodies-forms
 BuildRequires:	java-jgoodies-looks
 %{?with_java_sun:BuildRequires:	java-sun}
 BuildRequires:	jpackage-utils
-BuildRequires:	rpm >= 4.4.9-56
 BuildRequires:	rpm-javaprov
 %endif
-BuildRequires:	mcpp-devel
-BuildRequires:	mono-csharp
-BuildRequires:	openssl-devel
-%{?with_php:BuildRequires:	php-devel >= 3:5.0.0}
+%if %{with php}
+BuildRequires:	php-devel >= 3:5.0.0
+%endif
+%if %{with python}
 BuildRequires:	python-devel
-%{?with_python:BuildRequires:	rpm-pythonprov}
-BuildRequires:	rpmbuild(macros) >= 1.533
-%{?with_ruby:BuildRequires:	ruby >= 1:1.8.6}
+BuildRequires:	rpm-pythonprov
+%endif
+%if %{with ruby}
+BuildRequires:	ruby >= 1:1.8.6
 BuildRequires:	ruby-devel
+%endif
 # Ice doesn't officially support ppc64 at all; sparc64 doesnt have mono
 ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
