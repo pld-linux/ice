@@ -210,7 +210,7 @@ sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
 javac cpp/src/ca/ImportKey.java
 %endif
 
-%{__make} -C cpp \
+%{__make} -j1 -C cpp \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -229,7 +229,7 @@ rm temp*.png
 # Set the CLASSPATH correctly for the Java compile
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
-%{__make} -C java \
+%{__make} -j1 -C java \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -238,7 +238,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with dotnet}
-%{__make} -C cs \
+%{__make} -j1 -C cs \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -247,7 +247,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with python}
-%{__make} -C py \
+%{__make} -j1 -C py \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -256,7 +256,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with ruby}
-%{__make} -C rb \
+%{__make} -j1 -C rb \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -265,7 +265,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with php}
-%{__make} -C php \
+%{__make} -j1 -C php \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	PHP_HOME=%{_prefix} \
