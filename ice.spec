@@ -9,12 +9,6 @@
 %bcond_without	python		# Python bindings
 %bcond_without	ruby		# Ruby bindings
 
-%if "%{pld_release}" == "ti"
-%bcond_without	java_sun	# build with gcj
-%else
-%bcond_with	java_sun	# build with java-sun
-%endif
-
 %if %{without java}
 %undefine	with_gui
 %endif
@@ -46,7 +40,6 @@ BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
 BuildRequires:	mcpp-devel
 BuildRequires:	openssl-devel
-BuildRequires:	rpm >= 4.4.9-56
 BuildRequires:	rpmbuild(macros) >= 1.533
 %if %{with gui}
 BuildRequires:	ImageMagick
@@ -58,10 +51,9 @@ BuildRequires:	mono-csharp
 %if %{with java}
 BuildRequires:	ant-nodeps
 BuildRequires:	db-java-devel
-%{!?with_java_sun:BuildRequires:	java-gcj-compat-devel}
 BuildRequires:	java-jgoodies-forms
 BuildRequires:	java-jgoodies-looks
-%{?with_java_sun:BuildRequires:	java-sun}
+BuildRequires:	jdk
 BuildRequires:	jpackage-utils
 BuildRequires:	rpm-javaprov
 %endif
