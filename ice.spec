@@ -173,7 +173,8 @@ rm -f *man-pages/slice2docbook.1
 
 # Fix the encoding and line-endings of all the IceGridAdmin documentation files
 cd java/resources/IceGridAdmin
-%undos *.js *.css
+%undos -f js,css
+
 for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html.js zoom_pageinfo.js; do
 	iconv -f ISO88591 -t UTF8 $f -o $f.tmp
 	mv $f.tmp $f
