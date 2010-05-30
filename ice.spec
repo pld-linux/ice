@@ -17,7 +17,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	3
+Release:	4
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -600,6 +600,7 @@ fi
 %{ruby_sitearchdir}/IcePatch2.rb
 %{ruby_sitearchdir}/IcePatch2
 %{ruby_sitearchdir}/IceStorm.rb
+%dir %{ruby_sitearchdir}/IceStorm
 %{ruby_sitearchdir}/IceStorm/IceStorm.rb
 %attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so
 %endif
