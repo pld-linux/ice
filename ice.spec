@@ -17,7 +17,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.0
-Release:	4
+Release:	5
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -320,15 +320,15 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 %{__make} -C cs install \
 	prefix=$RPM_BUILD_ROOT \
 	GACINSTALL=yes \
-	GAC_ROOT=$RPM_BUILD_ROOT%{_libdir} \
+	GAC_ROOT=$RPM_BUILD_ROOT%{_prefix}/lib \
 
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 # .NET spec files (for csharp-devel) -- convert the paths
 for f in IceGrid Glacier2 IceBox Ice IceStorm IcePatch2; do
-	sed -i -e "s#/lib/#%{_libdir}/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
+	sed -i -e "s#/lib/#%{_prefix}/lib/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	mv $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc $RPM_BUILD_ROOT%{_pkgconfigdir}/$f.pc
-	mv $RPM_BUILD_ROOT%{_bindir}/$f.xml $RPM_BUILD_ROOT%{_libdir}/mono/gac/$f/%{version}.*/
+	mv $RPM_BUILD_ROOT%{_bindir}/$f.xml $RPM_BUILD_ROOT%{_prefix}/lib/mono/gac/$f/%{version}.*/
 done
 %endif
 
@@ -555,18 +555,18 @@ fi
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/iceboxnet.exe
 %{_mandir}/man1/iceboxnet.exe.1*
-%{_libdir}/mono/Glacier2
-%{_libdir}/mono/Ice
-%{_libdir}/mono/IceBox
-%{_libdir}/mono/IceGrid
-%{_libdir}/mono/IcePatch2
-%{_libdir}/mono/IceStorm
-%{_libdir}/mono/gac/Glacier2
-%{_libdir}/mono/gac/Ice
-%{_libdir}/mono/gac/IceBox
-%{_libdir}/mono/gac/IceGrid
-%{_libdir}/mono/gac/IcePatch2
-%{_libdir}/mono/gac/IceStorm
+%{_prefix}/lib/mono/Glacier2
+%{_prefix}/lib/mono/Ice
+%{_prefix}/lib/mono/IceBox
+%{_prefix}/lib/mono/IceGrid
+%{_prefix}/lib/mono/IcePatch2
+%{_prefix}/lib/mono/IceStorm
+%{_prefix}/lib/mono/gac/Glacier2
+%{_prefix}/lib/mono/gac/Ice
+%{_prefix}/lib/mono/gac/IceBox
+%{_prefix}/lib/mono/gac/IceGrid
+%{_prefix}/lib/mono/gac/IcePatch2
+%{_prefix}/lib/mono/gac/IceStorm
 %endif
 
 %if %{with python}
