@@ -16,15 +16,15 @@
 %{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
-Version:	3.4.0
-Release:	5
+Version:	3.4.1
+Release:	1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
-# Source0-md5:	998b10627ade020cb00f5beb73efc0e0
+# Source0-md5:	3aae42aa47dec74bb258c1a1b2847a1a
 # Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
-Source1:	Ice-rpmbuild-%{version}.tar.gz
+Source1:	Ice-rpmbuild-3.4.0.tar.gz
 # Source1-md5:	869cc60645e7e2b4115584a5ab17d1e9
 # Man pages courtesy of Francisco Moya's Debian packages
 Source2:	Ice-3.3.0-man-pages.tbz2
@@ -189,7 +189,7 @@ rm cpp/src/ca/ImportKey.class
 %endif
 
 # update path to our install
-sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rpmbuild-%{version}/icegridregistry.conf
+sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rpmbuild-*/icegridregistry.conf
 
 # force our CC/CXX as build system compares for exactly "c++" to setup other rules
 sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
@@ -340,7 +340,7 @@ install -d $RPM_BUILD_ROOT%{py_sitedir}/Ice
 mv $RPM_BUILD_ROOT/python/IcePy.so.*.*.* $RPM_BUILD_ROOT%{py_sitedir}/Ice/IcePy.so
 rm -f $RPM_BUILD_ROOT/python/IcePy.so*
 mv $RPM_BUILD_ROOT/python/* $RPM_BUILD_ROOT%{py_sitedir}/Ice
-cp -a Ice-rpmbuild-%{version}/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
+cp -a Ice-rpmbuild-*/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
 %py_comp $RPM_BUILD_ROOT%{py_sitedir}
 %py_postclean
@@ -361,7 +361,7 @@ mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_sitearchdir}
 	prefix=$RPM_BUILD_ROOT
 # Put the PHP stuff into the right place
 install -d $RPM_BUILD_ROOT{%{php_sysconfdir}/conf.d,%{php_extensiondir},%{php_data_dir}}
-cp -a Ice-rpmbuild-%{version}/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
+cp -a Ice-rpmbuild-*/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
 mv $RPM_BUILD_ROOT/php/IcePHP.so $RPM_BUILD_ROOT%{php_extensiondir}
 mv $RPM_BUILD_ROOT/php/* $RPM_BUILD_ROOT%{php_data_dir}
 %endif
@@ -377,10 +377,10 @@ cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 # Install the servers
 install -d $RPM_BUILD_ROOT%{_sysconfdir}
-cp -a Ice-rpmbuild-%{version}/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
+cp -a Ice-rpmbuild-*/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
 install -d $RPM_BUILD_ROOT%{_initrddir}
 for i in icegridregistry icegridnode glacier2router; do
-	cp -a Ice-rpmbuild-%{version}/$i.redhat $RPM_BUILD_ROOT%{_initrddir}/$i
+	cp -a Ice-rpmbuild-*/$i.redhat $RPM_BUILD_ROOT%{_initrddir}/$i
 done
 install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
 
@@ -561,12 +561,20 @@ fi
 %{_prefix}/lib/mono/IceGrid
 %{_prefix}/lib/mono/IcePatch2
 %{_prefix}/lib/mono/IceStorm
+
 %{_prefix}/lib/mono/gac/Glacier2
 %{_prefix}/lib/mono/gac/Ice
 %{_prefix}/lib/mono/gac/IceBox
 %{_prefix}/lib/mono/gac/IceGrid
 %{_prefix}/lib/mono/gac/IcePatch2
 %{_prefix}/lib/mono/gac/IceStorm
+
+%{_prefix}/lib/mono/gac/policy.3.4.Glacier2
+%{_prefix}/lib/mono/gac/policy.3.4.Ice
+%{_prefix}/lib/mono/gac/policy.3.4.IceBox
+%{_prefix}/lib/mono/gac/policy.3.4.IceGrid
+%{_prefix}/lib/mono/gac/policy.3.4.IcePatch2
+%{_prefix}/lib/mono/gac/policy.3.4.IceStorm
 %endif
 
 %if %{with python}
