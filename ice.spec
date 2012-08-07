@@ -16,8 +16,8 @@
 %{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
-Version:	3.4.1
-Release:	6
+Version:	3.4.2
+Release:	0.1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
