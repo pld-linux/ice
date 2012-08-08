@@ -51,6 +51,7 @@ BuildRequires:	mono-csharp
 %if %{with java}
 BuildRequires:	ant-nodeps
 BuildRequires:	db-java-devel
+BuildRequires:	java-jgoodies-common
 BuildRequires:	java-jgoodies-forms
 BuildRequires:	java-jgoodies-looks
 BuildRequires:	jdk
