@@ -22,7 +22,7 @@ License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
-# Source0-md5:	3aae42aa47dec74bb258c1a1b2847a1a
+# Source0-md5:	e97672eb4a63c6b8dd202d0773e19dc7
 # Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
 Source1:	Ice-rpmbuild-3.4.0.tar.gz
 # Source1-md5:	869cc60645e7e2b4115584a5ab17d1e9
