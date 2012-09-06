@@ -1,0 +1,11 @@
+--- Ice-3.4.2/cpp/src/Freeze/MapI.cpp~	2012-09-06 12:24:18.042948870 +0200
++++ Ice-3.4.2/cpp/src/Freeze/MapI.cpp	2012-09-06 12:28:20.686273643 +0200
+@@ -1497,7 +1497,7 @@
+ 
+     try
+     {
+-#if DB_VERSION_MAJOR != 4
++#if DB_VERSION_MAJOR < 4
+ #error Freeze requires DB 4.x
+ #endif
+ #if DB_VERSION_MINOR < 3

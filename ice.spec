@@ -17,7 +17,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.2
-Release:	1
+Release:	2
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -37,6 +37,7 @@ Patch2:		java-build.patch
 Patch3:		jgoodies.patch
 Patch4:		ice-gcc46.patch
 Patch5:		ice-gcc47.patch
+Patch6:		ice-db.patch
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
@@ -172,6 +173,7 @@ The Ice runtime for PHP applications.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 # no longer included in 3.4
 rm -f *man-pages/slice2docbook.1
