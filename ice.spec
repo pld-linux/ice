@@ -17,7 +17,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.2
-Release:	4
+Release:	5
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -53,7 +53,7 @@ BuildRequires:	ImageMagick-coder-png
 BuildRequires:	mono-csharp
 %endif
 %if %{with java}
-BuildRequires:	ant-nodeps
+BuildRequires:	ant
 BuildRequires:	db-java-devel
 BuildRequires:	java-jgoodies-common
 BuildRequires:	java-jgoodies-forms
