@@ -17,7 +17,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.2
-Release:	5
+Release:	6
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 URL:		http://www.zeroc.com/
@@ -35,16 +35,16 @@ Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
 Patch2:		java-build.patch
 Patch3:		jgoodies.patch
-Patch4:		ice-gcc46.patch
-Patch5:		ice-gcc47.patch
-Patch6:		ice-db.patch
-Patch7:		ice-format-security.patch
+Patch4:		%{name}-gcc46.patch
+Patch5:		%{name}-gcc47.patch
+Patch6:		%{name}-db.patch
+Patch7:		%{name}-format-security.patch
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
 BuildRequires:	mcpp-devel
 BuildRequires:	openssl-devel
-BuildRequires:	rpmbuild(macros) >= 1.533
+BuildRequires:	rpmbuild(macros) >= 1.665
 %if %{with gui}
 BuildRequires:	ImageMagick
 BuildRequires:	ImageMagick-coder-png
@@ -70,6 +70,7 @@ BuildRequires:	python-devel
 BuildRequires:	rpm-pythonprov
 %endif
 %if %{with ruby}
+BuildRequires:	rpm-rubyprov
 BuildRequires:	ruby >= 1:1.8.6
 BuildRequires:	ruby-devel
 %endif
@@ -143,7 +144,6 @@ The Ice runtime for C#
 Summary:	The Ice runtime for Ruby applications
 Group:		Development/Languages
 Requires:	%{name} = %{version}-%{release}
-%{?ruby_mod_ver_requires_eq}
 
 %description -n ruby-%{name}
 The Ice runtime for Ruby applications.
@@ -359,10 +359,10 @@ cp -a Ice-rpmbuild-*/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %{__make} -C rb install \
 	prefix=$RPM_BUILD_ROOT
 %{__sed} -i -e '1s,/usr/bin/env ruby,%{__ruby},' $RPM_BUILD_ROOT/ruby/*.rb
-install -d $RPM_BUILD_ROOT%{ruby_sitearchdir}
-mv $RPM_BUILD_ROOT/ruby/IceRuby.so.*.*.* $RPM_BUILD_ROOT%{ruby_sitearchdir}/IceRuby.so
+install -d $RPM_BUILD_ROOT%{ruby_vendorarchdir}
+mv $RPM_BUILD_ROOT/ruby/IceRuby.so.*.*.* $RPM_BUILD_ROOT%{ruby_vendorarchdir}/IceRuby.so
 rm -f $RPM_BUILD_ROOT/ruby/IceRuby.so*
-mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_sitearchdir}
+mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_vendorarchdir}
 %endif
 
 %if %{with php}
@@ -606,20 +606,20 @@ fi
 %if %{with ruby}
 %files -n ruby-%{name}
 %defattr(644,root,root,755)
-%{ruby_sitearchdir}/Glacier2.rb
-%{ruby_sitearchdir}/Glacier2
-%{ruby_sitearchdir}/Ice.rb
-%{ruby_sitearchdir}/Ice
-%{ruby_sitearchdir}/IceBox.rb
-%{ruby_sitearchdir}/IceBox
-%{ruby_sitearchdir}/IceGrid.rb
-%{ruby_sitearchdir}/IceGrid
-%{ruby_sitearchdir}/IcePatch2.rb
-%{ruby_sitearchdir}/IcePatch2
-%{ruby_sitearchdir}/IceStorm.rb
-%dir %{ruby_sitearchdir}/IceStorm
-%{ruby_sitearchdir}/IceStorm/IceStorm.rb
-%attr(755,root,root) %{ruby_sitearchdir}/IceRuby.so
+%{ruby_vendorarchdir}/Glacier2.rb
+%{ruby_vendorarchdir}/Glacier2
+%{ruby_vendorarchdir}/Ice.rb
+%{ruby_vendorarchdir}/Ice
+%{ruby_vendorarchdir}/IceBox.rb
+%{ruby_vendorarchdir}/IceBox
+%{ruby_vendorarchdir}/IceGrid.rb
+%{ruby_vendorarchdir}/IceGrid
+%{ruby_vendorarchdir}/IcePatch2.rb
+%{ruby_vendorarchdir}/IcePatch2
+%{ruby_vendorarchdir}/IceStorm.rb
+%dir %{ruby_vendorarchdir}/IceStorm
+%{ruby_vendorarchdir}/IceStorm/IceStorm.rb
+%attr(755,root,root) %{ruby_vendorarchdir}/IceRuby.so
 %endif
 
 %if %{with java}
