@@ -13,14 +13,19 @@
 %undefine	with_gui
 %endif
 
+# fails with php5.5, use php5.3
+%if "%{?php_suffix}" == ""
+%define		php_suffix	53
+%endif
+%define		php_name	php%{?php_suffix}
+
 %{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.4.2
-Release:	6
+Release:	7
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
-URL:		http://www.zeroc.com/
 Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
 # Source0-md5:	e97672eb4a63c6b8dd202d0773e19dc7
 # Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
@@ -39,6 +44,7 @@ Patch4:		%{name}-gcc46.patch
 Patch5:		%{name}-gcc47.patch
 Patch6:		%{name}-db.patch
 Patch7:		%{name}-format-security.patch
+URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
@@ -63,7 +69,7 @@ BuildRequires:	jpackage-utils
 BuildRequires:	rpm-javaprov
 %endif
 %if %{with php}
-BuildRequires:	php-devel >= 3:5.0.0
+BuildRequires:	%{php_name}-devel >= 3:5.0.0
 %endif
 %if %{with python}
 BuildRequires:	python-devel
@@ -157,13 +163,13 @@ Requires:	python >= 1:2.3.4
 %description -n python-%{name}
 The Ice runtime for Python applications.
 
-%package -n php-%{name}
+%package -n %{php_name}-%{name}
 Summary:	The Ice runtime for PHP applications
 Group:		Development/Languages/PHP
 Requires:	%{name} = %{version}-%{release}
 %{?requires_php_extension}
 
-%description -n php-%{name}
+%description -n %{php_name}-%{name}
 The Ice runtime for PHP applications.
 
 %prep
@@ -399,10 +405,10 @@ rm -rf $RPM_BUILD_ROOT
 %post	-p /sbin/ldconfig
 %postun	-p /sbin/ldconfig
 
-%post -n php-%{name}
+%post -n %{php_name}-%{name}
 %php_webserver_restart
 
-%postun -n php-%{name}
+%postun -n %{php_name}-%{name}
 if [ "$1" = 0 ]; then
 	%php_webserver_restart
 fi
@@ -632,7 +638,7 @@ fi
 %endif
 
 %if %{with php}
-%files -n php-%{name}
+%files -n %{php_name}-%{name}
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) %{php_sysconfdir}/conf.d/ice.ini
 %attr(755,root,root) %{php_extensiondir}/IcePHP.so
