@@ -78,7 +78,7 @@ ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 # Some file suffixes we need to grab the right stuff for the file lists
-%define		soversion	34
+%define		soversion	35
 
 %description
 Ice is a modern alternative to object middleware such as CORBA or
@@ -258,8 +258,8 @@ mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 
 ## Copy the man pages into the correct directory
-#install -d $RPM_BUILD_ROOT%{_mandir}/man1
-#cp -a *man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+cp -a man/man1/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
 
 %if %{with java}
 %{__make} -C java install \
@@ -302,7 +302,6 @@ for f in IceGrid Glacier2 IceBox Ice IceStorm IcePatch2; do
 	sed -i -e "s#/lib/#%{_prefix}/lib/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	mv $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc $RPM_BUILD_ROOT%{_pkgconfigdir}/$f.pc
-	mv $RPM_BUILD_ROOT%{_bindir}/$f.xml $RPM_BUILD_ROOT%{_prefix}/lib/mono/gac/$f/%{version}.*/
 done
 %endif
 
@@ -528,7 +527,7 @@ fi
 %files -n csharp-%{name}
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/iceboxnet.exe
-%{_mandir}/man1/iceboxnet.exe.1*
+%{_mandir}/man1/iceboxnet.1*
 %{_prefix}/lib/mono/Glacier2
 %{_prefix}/lib/mono/Ice
 %{_prefix}/lib/mono/IceBox
@@ -543,12 +542,12 @@ fi
 %{_prefix}/lib/mono/gac/IcePatch2
 %{_prefix}/lib/mono/gac/IceStorm
 
-%{_prefix}/lib/mono/gac/policy.3.4.Glacier2
-%{_prefix}/lib/mono/gac/policy.3.4.Ice
-%{_prefix}/lib/mono/gac/policy.3.4.IceBox
-%{_prefix}/lib/mono/gac/policy.3.4.IceGrid
-%{_prefix}/lib/mono/gac/policy.3.4.IcePatch2
-%{_prefix}/lib/mono/gac/policy.3.4.IceStorm
+%{_prefix}/lib/mono/gac/policy.3.5.Glacier2
+%{_prefix}/lib/mono/gac/policy.3.5.Ice
+%{_prefix}/lib/mono/gac/policy.3.5.IceBox
+%{_prefix}/lib/mono/gac/policy.3.5.IceGrid
+%{_prefix}/lib/mono/gac/policy.3.5.IcePatch2
+%{_prefix}/lib/mono/gac/policy.3.5.IceStorm
 %endif
 
 %if %{with python}
