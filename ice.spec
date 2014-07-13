@@ -22,28 +22,21 @@
 %{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
-Version:	3.4.2
-Release:	7
+Version:	3.5.1
+Release:	0.1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
-Source0:	http://www.zeroc.com/download/Ice/3.4/Ice-%{version}.tar.gz
-# Source0-md5:	e97672eb4a63c6b8dd202d0773e19dc7
-# Extracted from http://zeroc.com/download/Ice/3.4/ice-3.4.0-1.src.rpm
-Source1:	Ice-rpmbuild-3.4.0.tar.gz
-# Source1-md5:	869cc60645e7e2b4115584a5ab17d1e9
+Source0:	http://www.zeroc.com/download/Ice/3.5/Ice-%{version}.tar.gz
+# Source0-md5:	f00c59983cc904bca977133c0a9b3e80
+# Extracted from http://zeroc.com/download/Ice/3.5/ice-3.5.1-1.src.rpm
+Source1:	Ice-rpmbuild-%{version}.tar.gz
+# Source1-md5:	247ce2f92caf8d0615d4d35120421a7b
 # Man pages courtesy of Francisco Moya's Debian packages
-Source2:	Ice-3.3.0-man-pages.tbz2
-# Source2-md5:	c6c17ee1be2e6b615af5b40edae88b75
 Source3:	%{name}gridgui
 Source4:	IceGridAdmin.desktop
 Patch0:		%{name}-build.patch
 Patch1:		dont-build-demo-test.patch
-Patch2:		java-build.patch
 Patch3:		jgoodies.patch
-Patch4:		%{name}-gcc46.patch
-Patch5:		%{name}-gcc47.patch
-Patch6:		%{name}-db.patch
-Patch7:		%{name}-format-security.patch
 URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
@@ -173,28 +166,10 @@ Requires:	%{name} = %{version}-%{release}
 The Ice runtime for PHP applications.
 
 %prep
-%setup -q -n Ice-%{version} -a1 -a2
+%setup -q -n Ice-%{version} -a1
 %patch0 -p0
 %patch1 -p1
-%patch2 -p1
 %patch3 -p1
-%patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-
-# no longer included in 3.4
-rm -f *man-pages/slice2docbook.1
-
-# Fix the encoding and line-endings of all the IceGridAdmin documentation files
-cd java/resources/IceGridAdmin
-%undos -f js,css
-
-for f in helpman_topicinit.js icegridadmin_navigation.js IceGridAdmin_popup_html.js zoom_pageinfo.js; do
-	iconv -f ISO88591 -t UTF8 $f -o $f.tmp
-	mv $f.tmp $f
-done
-cd -
 
 %{__sed} -i -e '1s,/usr/bin/env python,%{__python},' cpp/src/ca/iceca
 
@@ -298,9 +273,9 @@ mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 
-# Copy the man pages into the correct directory
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-cp -a *man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
+## Copy the man pages into the correct directory
+#install -d $RPM_BUILD_ROOT%{_mandir}/man1
+#cp -a *man-pages/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
 
 %if %{with java}
 %{__make} -C java install \
