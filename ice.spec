@@ -185,17 +185,12 @@ sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rp
 sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
 
 %build
-# Compile the main Ice runtime
-# TODO: CC/CXX passing as make param breaks build system
-
 %if %{with java}
 # Rebuild the Java ImportKey class - need it early for main cpp build
 javac cpp/src/ca/ImportKey.java
 %endif
 
 %{__make} -j1 -C cpp \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC" \
 	embedded_runpath_prefix=""
@@ -208,7 +203,6 @@ rm temp*.png
 %endif
 
 %if %{with java}
-
 # Set the CLASSPATH correctly for the Java compile
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
