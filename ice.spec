@@ -2,10 +2,10 @@
 # - finish (pldize) -servers package
 #
 # Conditional build:
-%bcond_without	gui			# IceGrid GUI
+%bcond_without	gui		# IceGrid GUI
 %bcond_without	dotnet		# .NET bindings
-%bcond_without	java		# Java bindings
-%bcond_without	php			# PHP bindings
+%bcond_with	java		# Java bindings (build requires X11 DISPLAY)
+%bcond_without	php		# PHP bindings
 %bcond_without	python		# Python bindings
 %bcond_without	ruby		# Ruby bindings
 
