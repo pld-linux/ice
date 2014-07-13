@@ -192,7 +192,7 @@ javac cpp/src/ca/ImportKey.java
 
 %{__make} -j1 -C cpp \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 
 %if %{with gui}
@@ -207,47 +207,37 @@ rm temp*.png
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %{__make} -j1 -C java \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 %endif
 
 %if %{with dotnet}
 %{__make} -j1 -C cs \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 %endif
 
 %if %{with python}
 %{__make} -j1 -C py \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 %endif
 
 %if %{with ruby}
 %{__make} -j1 -C rb \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 %endif
 
 %if %{with php}
 %{__make} -j1 -C php \
-	CC="%{__cc}" \
-	CXX="%{__cxx}" \
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
-	CXXFLAGS="%{rpmcxxflags} -fPIC" \
+	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	embedded_runpath_prefix=""
 %endif
 
