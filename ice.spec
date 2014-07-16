@@ -23,7 +23,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.5.1
-Release:	0.1
+Release:	1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 Source0:	http://www.zeroc.com/download/Ice/3.5/Ice-%{version}.tar.gz
@@ -257,10 +257,6 @@ mv $RPM_BUILD_ROOT/%{_lib}/* $RPM_BUILD_ROOT%{_libdir}
 
 mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 
-## Copy the man pages into the correct directory
-install -d $RPM_BUILD_ROOT%{_mandir}/man1
-cp -a man/man1/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
-
 %if %{with java}
 %{__make} -C java install \
 	prefix=$RPM_BUILD_ROOT
@@ -357,6 +353,11 @@ for i in icegridregistry icegridnode glacier2router; do
 done
 install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
 
+## Copy the man pages into the correct directory
+install -d $RPM_BUILD_ROOT%{_mandir}/man1
+cp -a man/man1/*.1 $RPM_BUILD_ROOT%{_mandir}/man1
+%{__rm} -r $RPM_BUILD_ROOT/man
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
@@ -393,6 +394,7 @@ fi
 %{_mandir}/man1/glacier2router.1*
 %{_mandir}/man1/icebox.1*
 %{_mandir}/man1/iceboxadmin.1*
+%{_mandir}/man1/iceca.1*
 %{_mandir}/man1/icegridadmin.1*
 %{_mandir}/man1/icegridnode.1*
 %{_mandir}/man1/icegridregistry.1*
@@ -400,6 +402,7 @@ fi
 %{_mandir}/man1/icepatch2client.1*
 %{_mandir}/man1/icepatch2server.1*
 %{_mandir}/man1/icestormadmin.1*
+%{_mandir}/man1/icestormmigrate.1*
 %{_mandir}/man1/slice2html.1*
 %{_mandir}/man1/transformdb.1*
 %attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
@@ -507,6 +510,7 @@ fi
 %{_mandir}/man1/slice2java.1*
 # -php
 %attr(755,root,root) %{_bindir}/slice2php
+%{_mandir}/man1/slice2php.1*
 # -python
 %attr(755,root,root) %{_bindir}/slice2py
 %{_mandir}/man1/slice2py.1*
@@ -557,11 +561,13 @@ fi
 %dir %{py_sitedir}/Ice
 %dir %{py_sitedir}/Ice/IceBox
 %dir %{py_sitedir}/Ice/IceGrid
+%dir %{py_sitedir}/Ice/IceMX
 %dir %{py_sitedir}/Ice/IcePatch2
 %dir %{py_sitedir}/Ice/IceStorm
 %{py_sitedir}/Ice/*.py[co]
 %{py_sitedir}/Ice/IceBox/*.py[co]
 %{py_sitedir}/Ice/IceGrid/*.py[co]
+%{py_sitedir}/Ice/IceMX/*.py[co]
 %{py_sitedir}/Ice/IcePatch2/*.py[co]
 %{py_sitedir}/Ice/IceStorm/*.py[co]
 %attr(755,root,root) %{py_sitedir}/Ice/IcePy.so
@@ -583,6 +589,7 @@ fi
 %{ruby_vendorarchdir}/IceStorm.rb
 %dir %{ruby_vendorarchdir}/IceStorm
 %{ruby_vendorarchdir}/IceStorm/IceStorm.rb
+%{ruby_vendorarchdir}/IceStorm/Metrics.rb
 %attr(755,root,root) %{ruby_vendorarchdir}/IceRuby.so
 %endif
 
