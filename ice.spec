@@ -13,6 +13,9 @@
 %undefine	with_gui
 %endif
 
+%if "%{?php_suffix}" == ""
+%define		php_suffix	55
+%endif
 %define		php_name	php%{?php_suffix}
 
 %{?with_java:%include	/usr/lib/rpm/macros.java}
