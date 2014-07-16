@@ -13,10 +13,6 @@
 %undefine	with_gui
 %endif
 
-# fails with php5.5, use php5.3
-%if "%{?php_suffix}" == ""
-%define		php_suffix	53
-%endif
 %define		php_name	php%{?php_suffix}
 
 %{?with_java:%include	/usr/lib/rpm/macros.java}
