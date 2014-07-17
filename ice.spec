@@ -22,7 +22,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.5.1
-Release:	1
+Release:	2
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 Source0:	http://www.zeroc.com/download/Ice/3.5/Ice-%{version}.tar.gz
