@@ -15,3 +15,17 @@
      CXXFLAGS		+= $(CXXARCHFLAGS) -fvisibility=hidden -Wall -Werror -pthread
  
      # If MAXWARN is set then enable extra warnings
+--- ice-3.6.0/config/Make.common.rules~	2015-06-23 17:30:20.000000000 +0200
++++ ice-3.6.0/config/Make.common.rules	2015-06-28 01:53:57.149666595 +0200
+@@ -104,11 +104,6 @@
+           LP64      	= yes
+       endif
+    endif
+-   ifneq ($(STATICLIBS),yes)
+-	ifneq ($(LP64),yes)
+-	    binsuffix     = 32
+-	endif
+-    endif
+ endif
+ 
+ ifeq ($(shell test -d $(usr_dir)/lib/i386-linux-gnu && echo 0),0)
