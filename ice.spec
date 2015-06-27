@@ -13,6 +13,10 @@
 %undefine	with_gui
 %endif
 
+%ifarch x32
+%undefine	with_dotnet
+%endif
+
 %if "%{?php_suffix}" == ""
 %define		php_suffix	55
 %endif
@@ -21,21 +25,19 @@
 %{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Name:		ice
-Version:	3.5.1
-Release:	2
+Version:	3.6.0
+Release:	1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
-Source0:	http://www.zeroc.com/download/Ice/3.5/Ice-%{version}.tar.gz
-# Source0-md5:	f00c59983cc904bca977133c0a9b3e80
-# Extracted from http://zeroc.com/download/Ice/3.5/ice-3.5.1-1.src.rpm
+Source0:	https://github.com/zeroc-ice/ice/archive/v%{version}/%{name}-%{version}.tar.gz
+# Source0-md5:	ced45c83fb892a0b392b78af3dbb4af4
+# Extracted from http://zeroc.com/download/Ice/3.6/ice-3.6.0.src.rpm
 Source1:	Ice-rpmbuild-%{version}.tar.gz
-# Source1-md5:	247ce2f92caf8d0615d4d35120421a7b
+# Source1-md5:	b999b2ef7c2decf601b128e5bba50d17
 # Man pages courtesy of Francisco Moya's Debian packages
 Source3:	%{name}gridgui
 Source4:	IceGridAdmin.desktop
-Patch0:		%{name}-build.patch
-Patch1:		dont-build-demo-test.patch
-Patch3:		jgoodies.patch
+Patch0:		no-arch-opts.patch
 URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
@@ -77,7 +79,7 @@ ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 # Some file suffixes we need to grab the right stuff for the file lists
-%define		soversion	35
+%define		soversion	36
 
 %description
 Ice is a modern alternative to object middleware such as CORBA or
@@ -165,20 +167,16 @@ Requires:	%{name} = %{version}-%{release}
 The Ice runtime for PHP applications.
 
 %prep
-%setup -q -n Ice-%{version} -a1
-%patch0 -p0
-%patch1 -p1
-%patch3 -p1
-
-%{__sed} -i -e '1s,/usr/bin/env python,%{__python},' cpp/src/ca/iceca
+%setup -q -a1
+%patch0 -p1
 
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
-rm cpp/src/ca/ImportKey.class
+%{__rm} cpp/src/ca/ImportKey.class
 %endif
 
 # update path to our install
-sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' cpp/src/ca/iceca Ice-rpmbuild-*/icegridregistry.conf
+sed -i -e 's,/usr/share/Ice-%{version},%{_datadir}/Ice,' Ice-rpmbuild-*/icegridregistry.conf
 
 # force our CC/CXX as build system compares for exactly "c++" to setup other rules
 sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
@@ -192,7 +190,10 @@ javac cpp/src/ca/ImportKey.java
 %{__make} -j1 -C cpp \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 
 %if %{with gui}
 # Create the IceGrid icon
@@ -208,28 +209,40 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %{__make} -j1 -C java \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 %endif
 
 %if %{with dotnet}
-%{__make} -j1 -C cs \
+%{__make} -j1 -C csharp \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 %endif
 
 %if %{with python}
-%{__make} -j1 -C py \
+%{__make} -j1 -C python \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 %endif
 
 %if %{with ruby}
-%{__make} -j1 -C rb \
+%{__make} -j1 -C ruby \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 %endif
 
 %if %{with php}
@@ -237,7 +250,10 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
-	embedded_runpath_prefix=""
+%ifarch x32
+	lp64suffix=x32 \
+%endif
+	embedded_runpath=no
 %endif
 
 %install
@@ -245,10 +261,10 @@ rm -rf $RPM_BUILD_ROOT
 install -d $RPM_BUILD_ROOT{%{_bindir},%{_libdir},%{_includedir},%{_docdir}/Ice-%{version},%{_datadir}/Ice}
 
 %{__make} -C cpp install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT
-
-# Move the ImportKey.class file
-mv $RPM_BUILD_ROOT/lib/ImportKey.class $RPM_BUILD_ROOT%{_datadir}/Ice
 
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 mv $RPM_BUILD_ROOT/include/* $RPM_BUILD_ROOT%{_includedir}
@@ -258,6 +274,9 @@ mv $RPM_BUILD_ROOT/config/* $RPM_BUILD_ROOT%{_datadir}/Ice
 
 %if %{with java}
 %{__make} -C java install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT
 
 # Move Java stuff where it should be
@@ -286,7 +305,10 @@ mv $RPM_BUILD_ROOT/help/IceGridAdmin $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 %if %{with dotnet}
 install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
-%{__make} -C cs install \
+%{__make} -C csharp install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT \
 	GACINSTALL=yes \
 	GAC_ROOT=$RPM_BUILD_ROOT%{_prefix}/lib \
@@ -301,21 +323,26 @@ done
 %endif
 
 %if %{with python}
-%{__make} -C py install \
+%{__make} -C python install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT
 %{__sed} -i -e '1s,/usr/bin/env python,%{__python},' $RPM_BUILD_ROOT/python/Ice.py
 install -d $RPM_BUILD_ROOT%{py_sitedir}/Ice
 mv $RPM_BUILD_ROOT/python/IcePy.so.*.*.* $RPM_BUILD_ROOT%{py_sitedir}/Ice/IcePy.so
 rm -f $RPM_BUILD_ROOT/python/IcePy.so*
 mv $RPM_BUILD_ROOT/python/* $RPM_BUILD_ROOT%{py_sitedir}/Ice
-cp -a Ice-rpmbuild-*/ice.pth $RPM_BUILD_ROOT%{py_sitedir}
 %py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
 %py_comp $RPM_BUILD_ROOT%{py_sitedir}
 %py_postclean
 %endif
 
 %if %{with ruby}
-%{__make} -C rb install \
+%{__make} -C ruby install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT
 %{__sed} -i -e '1s,/usr/bin/env ruby,%{__ruby},' $RPM_BUILD_ROOT/ruby/*.rb
 install -d $RPM_BUILD_ROOT%{ruby_vendorarchdir}
@@ -326,6 +353,9 @@ mv $RPM_BUILD_ROOT/ruby/* $RPM_BUILD_ROOT%{ruby_vendorarchdir}
 
 %if %{with php}
 %{__make} -C php install \
+%ifarch x32
+	lp64suffix=x32 \
+%endif
 	prefix=$RPM_BUILD_ROOT
 # Put the PHP stuff into the right place
 install -d $RPM_BUILD_ROOT{%{php_sysconfdir}/conf.d,%{php_extensiondir},%{php_data_dir}}
@@ -341,7 +371,7 @@ mv $RPM_BUILD_ROOT/slice $RPM_BUILD_ROOT%{_datadir}/Ice
 mv $RPM_BUILD_ROOT/ICE_LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/ICE_LICENSE
 mv $RPM_BUILD_ROOT/LICENSE $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}/LICENSE
 # Copy in the other files too
-cp CHANGES RELEASE_NOTES  $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
+cp CHANGELOG*.md CONTRIBUTING.md README.md $RPM_BUILD_ROOT%{_docdir}/Ice-%{version}
 
 # Install the servers
 install -d $RPM_BUILD_ROOT%{_sysconfdir}
@@ -378,7 +408,6 @@ fi
 %attr(755,root,root) %{_bindir}/glacier2router
 %attr(755,root,root) %{_bindir}/icebox
 %attr(755,root,root) %{_bindir}/iceboxadmin
-%attr(755,root,root) %{_bindir}/iceca
 %attr(755,root,root) %{_bindir}/icegridadmin
 %attr(755,root,root) %{_bindir}/icegridnode
 %attr(755,root,root) %{_bindir}/icegridregistry
@@ -393,7 +422,7 @@ fi
 %{_mandir}/man1/glacier2router.1*
 %{_mandir}/man1/icebox.1*
 %{_mandir}/man1/iceboxadmin.1*
-%{_mandir}/man1/iceca.1*
+%{_mandir}/man1/iceboxnet.1*
 %{_mandir}/man1/icegridadmin.1*
 %{_mandir}/man1/icegridnode.1*
 %{_mandir}/man1/icegridregistry.1*
@@ -408,24 +437,24 @@ fi
 %attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libGlacier2.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libGlacier2CryptPermissionsVerifier.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libGlacier2CryptPermissionsVerifier.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIce.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIce.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceBox.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceBox.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceDB.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceDB.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceDiscovery.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceDiscovery.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceGrid.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceGrid.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceGridFreezeDB.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceGridFreezeDB.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceLocatorDiscovery.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceLocatorDiscovery.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIcePatch2.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIcePatch2.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceSSL.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceSSL.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceStorm.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceStorm.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceStormFreezeDB.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceStormFreezeDB.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceStormService.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceStormService.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceUtil.so.*.*.*
@@ -456,17 +485,17 @@ fi
 %attr(755,root,root) %{_bindir}/slice2cpp
 %attr(755,root,root) %{_bindir}/slice2freeze
 %attr(755,root,root) %{_libdir}/libFreeze.so
+%attr(755,root,root) %{_libdir}/libGlacier2CryptPermissionsVerifier.so
 %attr(755,root,root) %{_libdir}/libGlacier2.so
-%attr(755,root,root) %{_libdir}/libIce.so
 %attr(755,root,root) %{_libdir}/libIceBox.so
-%attr(755,root,root) %{_libdir}/libIceDB.so
+%attr(755,root,root) %{_libdir}/libIceDiscovery.so
 %attr(755,root,root) %{_libdir}/libIceGrid.so
-%attr(755,root,root) %{_libdir}/libIceGridFreezeDB.so
+%attr(755,root,root) %{_libdir}/libIceLocatorDiscovery.so
 %attr(755,root,root) %{_libdir}/libIcePatch2.so
+%attr(755,root,root) %{_libdir}/libIce.so
 %attr(755,root,root) %{_libdir}/libIceSSL.so
-%attr(755,root,root) %{_libdir}/libIceStorm.so
-%attr(755,root,root) %{_libdir}/libIceStormFreezeDB.so
 %attr(755,root,root) %{_libdir}/libIceStormService.so
+%attr(755,root,root) %{_libdir}/libIceStorm.so
 %attr(755,root,root) %{_libdir}/libIceUtil.so
 %attr(755,root,root) %{_libdir}/libIceXML.so
 %attr(755,root,root) %{_libdir}/libSlice.so
@@ -479,7 +508,6 @@ fi
 %{_includedir}/IceSSL
 %{_includedir}/IceStorm
 %{_includedir}/IceUtil
-%{_includedir}/IceXML
 %{_includedir}/Slice
 %{_mandir}/man1/slice2cpp.1*
 %{_mandir}/man1/slice2freeze.1*
@@ -507,14 +535,17 @@ fi
 %attr(755,root,root) %{_bindir}/slice2java
 %{_mandir}/man1/slice2freezej.1*
 %{_mandir}/man1/slice2java.1*
+# -js
+%attr(755,root,root) %{_bindir}/slice2js
+%{_mandir}/man1/slice2js.1*
 # -php
 %attr(755,root,root) %{_bindir}/slice2php
 %{_mandir}/man1/slice2php.1*
 # -python
-%attr(755,root,root) %{_bindir}/slice2py
+#%attr(755,root,root) %{_bindir}/slice2py
 %{_mandir}/man1/slice2py.1*
 # -ruby
-%attr(755,root,root) %{_bindir}/slice2rb
+#%attr(755,root,root) %{_bindir}/slice2rb
 %{_mandir}/man1/slice2rb.1*
 
 %files servers
@@ -556,7 +587,6 @@ fi
 %if %{with python}
 %files -n python-%{name}
 %defattr(644,root,root,755)
-%{py_sitedir}/ice.pth
 %dir %{py_sitedir}/Ice
 %dir %{py_sitedir}/Ice/IceBox
 %dir %{py_sitedir}/Ice/IceGrid

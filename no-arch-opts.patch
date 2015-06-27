@@ -1,0 +1,17 @@
+--- ice-3.6.0/cpp/config/Make.rules.Linux~	2015-06-27 16:56:56.000000000 +0200
++++ ice-3.6.0/cpp/config/Make.rules.Linux	2015-06-27 17:23:45.810591931 +0200
+@@ -71,14 +71,6 @@
+         CXXARCHFLAGS	+= -mtune=v8 -pipe -Wno-deprecated -DICE_USE_MUTEX_SHARED
+     endif
+ 
+-    ifeq ($(MACHINE),x86_64)
+-        ifeq ($(LP64),yes)
+-            CXXARCHFLAGS	+= -m64
+-        else
+-            CXXARCHFLAGS	+= -m32
+-        endif
+-    endif
+-
+     CXXFLAGS		+= $(CXXARCHFLAGS) -fvisibility=hidden -Wall -Werror -pthread
+ 
+     # If MAXWARN is set then enable extra warnings
