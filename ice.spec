@@ -38,6 +38,7 @@ Source1:	Ice-rpmbuild-%{version}.tar.gz
 Source3:	%{name}gridgui
 Source4:	IceGridAdmin.desktop
 Patch0:		no-arch-opts.patch
+Patch1:		csharp-build.patch
 URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
@@ -169,6 +170,7 @@ The Ice runtime for PHP applications.
 %prep
 %setup -q -a1
 %patch0 -p1
+%patch1 -p1
 
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
@@ -187,7 +189,7 @@ sed -i -e 's,c++,%{__cxx},g' cpp/config/Make.rules.Linux
 javac cpp/src/ca/ImportKey.java
 %endif
 
-%{__make} -j1 -C cpp \
+%{__make} -C cpp \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
@@ -206,7 +208,7 @@ rm temp*.png
 # Set the CLASSPATH correctly for the Java compile
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
-%{__make} -j1 -C java \
+%{__make} -C java \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
@@ -216,7 +218,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with dotnet}
-%{__make} -j1 -C csharp \
+%{__make} -C csharp \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
@@ -226,7 +228,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with python}
-%{__make} -j1 -C python \
+%{__make} -C python \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
@@ -236,7 +238,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with ruby}
-%{__make} -j1 -C ruby \
+%{__make} -C ruby \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
@@ -246,7 +248,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %endif
 
 %if %{with php}
-%{__make} -j1 -C php \
+%{__make} -C php \
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
@@ -315,7 +317,7 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 
 mv $RPM_BUILD_ROOT/bin/* $RPM_BUILD_ROOT%{_bindir}
 # .NET spec files (for csharp-devel) -- convert the paths
-for f in IceGrid Glacier2 IceBox Ice IceStorm IcePatch2; do
+for f in Glacier2 Ice IceBox IceDiscovery IceGrid IceLocatorDiscovery IcePatch2 IceSSL IceStorm; do
 	sed -i -e "s#/lib/#%{_prefix}/lib/#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	sed -i -e "s#mono_root}/usr#mono_root}#" $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc
 	mv $RPM_BUILD_ROOT/lib/pkgconfig/$f.pc $RPM_BUILD_ROOT%{_pkgconfigdir}/$f.pc
@@ -422,7 +424,6 @@ fi
 %{_mandir}/man1/glacier2router.1*
 %{_mandir}/man1/icebox.1*
 %{_mandir}/man1/iceboxadmin.1*
-%{_mandir}/man1/iceboxnet.1*
 %{_mandir}/man1/icegridadmin.1*
 %{_mandir}/man1/icegridnode.1*
 %{_mandir}/man1/icegridregistry.1*
@@ -521,8 +522,11 @@ fi
 %{_pkgconfigdir}/Glacier2.pc
 %{_pkgconfigdir}/Ice.pc
 %{_pkgconfigdir}/IceBox.pc
+%{_pkgconfigdir}/IceDiscovery.pc
 %{_pkgconfigdir}/IceGrid.pc
+%{_pkgconfigdir}/IceLocatorDiscovery.pc
 %{_pkgconfigdir}/IcePatch2.pc
+%{_pkgconfigdir}/IceSSL.pc
 %{_pkgconfigdir}/IceStorm.pc
 %endif
 
@@ -565,23 +569,22 @@ fi
 %{_prefix}/lib/mono/Glacier2
 %{_prefix}/lib/mono/Ice
 %{_prefix}/lib/mono/IceBox
+%{_prefix}/lib/mono/IceDiscovery
 %{_prefix}/lib/mono/IceGrid
+%{_prefix}/lib/mono/IceLocatorDiscovery
 %{_prefix}/lib/mono/IcePatch2
+%{_prefix}/lib/mono/IceSSL
 %{_prefix}/lib/mono/IceStorm
 
 %{_prefix}/lib/mono/gac/Glacier2
 %{_prefix}/lib/mono/gac/Ice
 %{_prefix}/lib/mono/gac/IceBox
+%{_prefix}/lib/mono/gac/IceDiscovery
 %{_prefix}/lib/mono/gac/IceGrid
+%{_prefix}/lib/mono/gac/IceLocatorDiscovery
 %{_prefix}/lib/mono/gac/IcePatch2
+%{_prefix}/lib/mono/gac/IceSSL
 %{_prefix}/lib/mono/gac/IceStorm
-
-%{_prefix}/lib/mono/gac/policy.3.5.Glacier2
-%{_prefix}/lib/mono/gac/policy.3.5.Ice
-%{_prefix}/lib/mono/gac/policy.3.5.IceBox
-%{_prefix}/lib/mono/gac/policy.3.5.IceGrid
-%{_prefix}/lib/mono/gac/policy.3.5.IcePatch2
-%{_prefix}/lib/mono/gac/policy.3.5.IceStorm
 %endif
 
 %if %{with python}
