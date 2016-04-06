@@ -26,7 +26,7 @@
 Summary:	The Ice base runtime and services
 Name:		ice
 Version:	3.6.0
-Release:	4
+Release:	5
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 Source0:	https://github.com/zeroc-ice/ice/archive/v%{version}/%{name}-%{version}.tar.gz
@@ -219,6 +219,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with dotnet}
 %{__make} -C csharp \
+	MCS=dmcs \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 %ifarch x32
