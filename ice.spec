@@ -6,6 +6,7 @@
 %bcond_without	dotnet		# .NET bindings
 %bcond_with	java		# Java bindings (build requires X11 DISPLAY)
 %bcond_without	php		# PHP bindings
+%bcond_with	default_php	# build for default PHP
 %bcond_without	python		# Python bindings
 %bcond_without	ruby		# Ruby bindings
 
@@ -17,8 +18,10 @@
 %undefine	with_dotnet
 %endif
 
-%if "%{?php_suffix}" == "x"
+%if %{without default_php}
+%if "%{?php_suffix}" == ""
 %define		php_suffix	55
+%endif
 %endif
 %define		php_name	php%{?php_suffix}
 
