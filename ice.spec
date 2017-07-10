@@ -5,7 +5,7 @@
 %bcond_without	gui		# IceGrid GUI
 %bcond_without	dotnet		# .NET bindings
 %bcond_with	java		# Java bindings (build requires X11 DISPLAY)
-%bcond_without	php		# PHP bindings
+%bcond_with	php		# PHP bindings
 %bcond_with	default_php	# build for default PHP
 %bcond_without	python		# Python bindings
 %bcond_without	ruby		# Ruby bindings
@@ -30,7 +30,7 @@ Summary:	The Ice base runtime and services
 Summary(pl.UTF-8):	Podstawowy pakiet uruchomieniowy oraz usługowy Ice
 Name:		ice
 Version:	3.6.3
-Release:	1
+Release:	2
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 #Source0Download: https://github.com/zeroc-ice/ice/releases
