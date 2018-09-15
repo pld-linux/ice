@@ -30,7 +30,7 @@ Summary:	The Ice base runtime and services
 Summary(pl.UTF-8):	Podstawowy pakiet uruchomieniowy oraz usługowy Ice
 Name:		ice
 Version:	3.6.3
-Release:	4
+Release:	5
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 #Source0Download: https://github.com/zeroc-ice/ice/releases
