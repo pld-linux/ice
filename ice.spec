@@ -25,7 +25,6 @@
 %endif
 %define		php_name	php%{?php_suffix}
 
-%{?with_java:%include	/usr/lib/rpm/macros.java}
 Summary:	The Ice base runtime and services
 Summary(pl.UTF-8):	Podstawowy pakiet uruchomieniowy oraz usługowy Ice
 Name:		ice
