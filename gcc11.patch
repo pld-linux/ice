@@ -1,0 +1,138 @@
+diff -ur ice-3.6.3/python/modules/IcePy/Operation.cpp ice-3.6.3-gcc11/python/modules/IcePy/Operation.cpp
+--- ice-3.6.3/python/modules/IcePy/Operation.cpp	2016-10-05 16:59:08.000000000 +0200
++++ ice-3.6.3-gcc11/python/modules/IcePy/Operation.cpp	2021-10-17 22:55:04.065560566 +0200
+@@ -1682,7 +1682,7 @@
+             }
+             else
+             {
+-                if(PyTuple_SET_ITEM(results.get(), info->pos, Unset) < 0)
++                if(PyTuple_SET_ITEM(results.get(), info->pos, Unset) != 0)
+                 {
+                     return 0;
+                 }
+@@ -2546,7 +2546,7 @@
+             throwPythonException();
+         }
+ 
+-        if(PyTuple_SET_ITEM(result.get(), 0, ok ? incTrue() : incFalse()) < 0)
++        if(PyTuple_SET_ITEM(result.get(), 0, ok ? incTrue() : incFalse()) != 0)
+         {
+             throwPythonException();
+         }
+@@ -2586,7 +2586,7 @@
+         }
+ #endif
+ 
+-        if(PyTuple_SET_ITEM(result.get(), 1, op.get()) < 0)
++        if(PyTuple_SET_ITEM(result.get(), 1, op.get()) != 0)
+         {
+             throwPythonException();
+         }
+@@ -2827,7 +2827,7 @@
+             return 0;
+         }
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) != 0)
+         {
+             return 0;
+         }
+@@ -2867,7 +2867,7 @@
+         memcpy(buf, results.first, sz);
+ #endif
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) != 0)
+         {
+             return 0;
+         }
+@@ -2910,7 +2910,7 @@
+             return;
+         }
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) != 0)
+         {
+             assert(PyErr_Occurred());
+             PyErr_Print();
+@@ -2958,7 +2958,7 @@
+         memcpy(buf, results.first, sz);
+ #endif
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) != 0)
+         {
+             assert(PyErr_Occurred());
+             PyErr_Print();
+@@ -3126,7 +3126,7 @@
+             return;
+         }
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 0, ok ? incTrue() : incFalse()) != 0)
+         {
+             assert(PyErr_Occurred());
+             PyErr_Print();
+@@ -3174,7 +3174,7 @@
+         memcpy(buf, results.first, sz);
+ #endif
+ 
+-        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) < 0)
++        if(PyTuple_SET_ITEM(args.get(), 1, op.get()) != 0)
+         {
+             assert(PyErr_Occurred());
+             PyErr_Print();
+@@ -3302,7 +3302,7 @@
+                 }
+                 else
+                 {
+-                    if(PyTuple_SET_ITEM(args.get(), info->pos + offset, Unset) < 0)
++                    if(PyTuple_SET_ITEM(args.get(), info->pos + offset, Unset) != 0)
+                     {
+                         throwPythonException();
+                     }
+@@ -3329,7 +3329,7 @@
+     // Create an object to represent Ice::Current. We need to append this to the argument tuple.
+     //
+     PyObjectHandle curr = createCurrent(current);
+-    if(PyTuple_SET_ITEM(args.get(), PyTuple_GET_SIZE(args.get()) - 1, curr.get()) < 0)
++    if(PyTuple_SET_ITEM(args.get(), PyTuple_GET_SIZE(args.get()) - 1, curr.get()) != 0)
+     {
+         throwPythonException();
+     }
+@@ -3347,7 +3347,7 @@
+         }
+         obj->upcall = new UpcallPtr(this);
+         obj->encoding = current.encoding;
+-        if(PyTuple_SET_ITEM(args.get(), 0, (PyObject*)obj) < 0) // PyTuple_SET_ITEM steals a reference.
++        if(PyTuple_SET_ITEM(args.get(), 0, (PyObject*)obj) != 0) // PyTuple_SET_ITEM steals a reference.
+         {
+             Py_DECREF(obj);
+             throwPythonException();
+@@ -3698,7 +3698,7 @@
+     }
+ #endif
+ 
+-    if(PyTuple_SET_ITEM(args.get(), start, ip.get()) < 0)
++    if(PyTuple_SET_ITEM(args.get(), start, ip.get()) != 0)
+     {
+         throwPythonException();
+     }
+@@ -3710,7 +3710,7 @@
+     // this to the argument tuple.
+     //
+     PyObjectHandle curr = createCurrent(current);
+-    if(PyTuple_SET_ITEM(args.get(), start, curr.get()) < 0)
++    if(PyTuple_SET_ITEM(args.get(), start, curr.get()) != 0)
+     {
+         throwPythonException();
+     }
+@@ -3730,7 +3730,7 @@
+         }
+         obj->upcall = new UpcallPtr(this);
+         obj->encoding = current.encoding;
+-        if(PyTuple_SET_ITEM(args.get(), 0, (PyObject*)obj) < 0) // PyTuple_SET_ITEM steals a reference.
++        if(PyTuple_SET_ITEM(args.get(), 0, (PyObject*)obj) != 0) // PyTuple_SET_ITEM steals a reference.
+         {
+             Py_DECREF(obj);
+             throwPythonException();

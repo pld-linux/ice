@@ -29,7 +29,7 @@ Summary:	The Ice base runtime and services
 Summary(pl.UTF-8):	Podstawowy pakiet uruchomieniowy oraz usługowy Ice
 Name:		ice
 Version:	3.6.3
-Release:	6
+Release:	7
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 #Source0Download: https://github.com/zeroc-ice/ice/releases
@@ -44,6 +44,7 @@ Patch0:		no-arch-opts.patch
 Patch1:		csharp-build.patch
 Patch2:		%{name}-db.patch
 Patch3:		%{name}-php7.patch
+Patch4:		gcc11.patch
 URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
@@ -220,6 +221,7 @@ Pakiet uruchomieniowy Ice dla aplikacji w PHP.
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
+%patch4 -p1
 
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
