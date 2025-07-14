@@ -217,11 +217,11 @@ Pakiet uruchomieniowy Ice dla aplikacji w PHP.
 
 %prep
 %setup -q -a1
-%patch0 -p1
-%patch1 -p1
-%patch2 -p1
-%patch3 -p1
-%patch4 -p1
+%patch -P0 -p1
+%patch -P1 -p1
+%patch -P2 -p1
+%patch -P3 -p1
+%patch -P4 -p1
 
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
