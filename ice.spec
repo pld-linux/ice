@@ -328,6 +328,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 rm -rf $RPM_BUILD_ROOT
 
 %{__make} install-slice \
+	build-platform=%{_arch} \
 	SLICE_DIR_SYMLINK=yes \
 	DESTDIR=$RPM_BUILD_ROOT \
 	prefix=%{_prefix} \
@@ -336,6 +337,7 @@ rm -rf $RPM_BUILD_ROOT
 	install_slicedir=%{_datadir}/Ice/slice
 
 %{__make} -C cpp install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -349,6 +351,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %if %{with java}
 %{__make} -C java install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -384,6 +387,7 @@ cp -a java/resources/icons/icegrid.png $RPM_BUILD_ROOT%{_pixmapsdir}
 %if %{with dotnet}
 install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 %{__make} -C csharp install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -397,6 +401,7 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 
 %if %{with python}
 %{__make} -C python install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -415,6 +420,7 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 
 %if %{with ruby}
 %{__make} -C ruby install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -428,6 +434,7 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 
 %if %{with php}
 %{__make} -C php install \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
