@@ -1,48 +1,21 @@
---- ice-3.6.3/cpp/config/Make.rules.Linux.orig	2016-10-05 16:59:08.000000000 +0200
-+++ ice-3.6.3/cpp/config/Make.rules.Linux	2017-06-28 16:32:48.328625292 +0200
-@@ -79,18 +79,6 @@
-         CXXARCHFLAGS	+= -mtune=v8 -pipe -Wno-deprecated -DICE_USE_MUTEX_SHARED
-     endif
+--- ice-3.8.1/config/Make.rules.Linux~	2026-04-20 18:57:56.000000000 +0200
++++ ice-3.8.1/config/Make.rules.Linux	2026-04-20 19:01:20.096672176 +0200
+@@ -35,14 +35,14 @@
+ # Targeting x86-64-v2, compatible with most x86-64 processors. This matches the defaults in RHEL 9 x86-64 builds.
+ # https://developers.redhat.com/blog/2021/01/05/building-red-hat-enterprise-linux-9-for-the-x86-64-v2-microarchitecture-level
  
--    #
--    # Only use multilib -m32/-m64 options for amd64 arch, x32 arch can also run
--    # in amd64 macines but doesn't use multilib, in this case MACHINE_TYPE will
--    # be x86_64 and HOST_ARCH x32.
--    #
--    ifeq ($(HOST_ARCH),amd64)
--        ifeq ($(LP64),yes)
--            CXXARCHFLAGS	+= -m64
--        else
--            CXXARCHFLAGS	+= -m32
--        endif
--    endif
+-x64_cppflags            := $(call opt-cppflags,x86_64) -m64 -march=x86-64-v2
+-x64_ldflags             := $(call opt-ldflags,x86_64) -m64
++x64_cppflags            := $(call opt-cppflags,x86_64)
++x64_ldflags             := $(call opt-ldflags,x86_64)
+ x64_targetdir           = $(if $(filter %/build,$5),/x64,$(if $(filter-out $($1_target),program),64))
+ x64_installdir          = $(if $(and $(filter-out $($1_target),program),$(if $5,$(filter-out %64,$5),true)),64)
+ x64_cmakedir            = /cmake
  
-     CXXFLAGS		+= $(CXXARCHFLAGS) -fvisibility=hidden -Wall -Werror -pthread
- 
---- ice-3.6.3/config/Make.common.rules.orig	2016-10-05 16:59:08.000000000 +0200
-+++ ice-3.6.3/config/Make.common.rules	2017-06-28 16:40:31.135286671 +0200
-@@ -102,24 +102,8 @@
-           LP64      	= yes
-       endif
- 
--      #
--      # x86 binaries build on x86_64 machine use 32 binsuffix
--      #
--      ifneq ($(STATICLIBS),yes)
--          ifneq ($(LP64),yes)
--              binsuffix	= 32
--          endif
--      endif
-    endif
- 
--   #
--   # x86 builds uses 32 binsuffix
--   #
--   ifneq ($(STATICLIBS),yes)
--	ifeq ($(findstring $(MACHINE_TYPE),i386 i486 i586 i686),$(MACHINE_TYPE))
--	    binsuffix     = 32
--	endif
--    endif
- endif
- 
- ifeq ($(CPP11),yes)
+-x86_cppflags            := $(call opt-cppflags,i386) -m32 -march=x86-64-v2
+-x86_ldflags             := $(call opt-ldflags,i386) -m32
++x86_cppflags            := $(call opt-cppflags,i386)
++x86_ldflags             := $(call opt-ldflags,i386)
+ x86_targetdir           = $(if $(filter %/build,$5),/x86)
+ x86_targetname          = $(if $(is-bin-program),32)
+ x86_cmakedir            = /cmake

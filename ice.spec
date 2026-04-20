@@ -217,7 +217,7 @@ Pakiet uruchomieniowy Ice dla aplikacji w PHP.
 
 %prep
 %setup -q -a1
-#patch -P0 -p1
+%patch -P0 -p1
 %patch -P1 -p1
 
 # update path to our install
@@ -241,6 +241,7 @@ javac cpp/src/ca/ImportKey.java
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
 	GCC_COMPILER=yes \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -264,6 +265,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -274,6 +276,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %{__make} -C csharp \
 	V=1 \
 	MCS=dmcs \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -287,6 +290,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -300,6 +304,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
@@ -312,6 +317,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
+	build-platform=%{_arch} \
 %ifarch x32
 	lp64suffix=x32 \
 %endif
