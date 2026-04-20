@@ -47,7 +47,6 @@ URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
-BuildRequires:	gradle
 BuildRequires:	mcpp-devel
 BuildRequires:	openssl-devel
 BuildRequires:	rpmbuild(macros) >= 1.665
@@ -61,6 +60,7 @@ BuildRequires:	mono-csharp
 %if %{with java}
 BuildRequires:	ant
 BuildRequires:	db-java-devel
+BuildRequires:	gradle
 BuildRequires:	java-jgoodies-common
 BuildRequires:	java-jgoodies-forms
 BuildRequires:	java-jgoodies-looks
