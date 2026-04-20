@@ -3,11 +3,11 @@
 #
 # Conditional build:
 %bcond_without	gui		# IceGrid GUI
-%bcond_without	dotnet		# .NET bindings
+%bcond_with	dotnet		# .NET bindings
 %bcond_with	java		# Java bindings (build requires X11 DISPLAY)
 %bcond_with	php		# PHP bindings
 %bcond_with	default_php	# build for default PHP
-%bcond_without	python		# Python bindings
+%bcond_without	python		# Python 3 bindings
 %bcond_without	ruby		# Ruby bindings
 
 %if %{without java}
@@ -25,30 +25,29 @@
 %endif
 %define		php_name	php%{?php_suffix}
 
+%define		packaging_ver	3.7.10
+
 Summary:	The Ice base runtime and services
 Summary(pl.UTF-8):	Podstawowy pakiet uruchomieniowy oraz usługowy Ice
 Name:		ice
-Version:	3.6.3
-Release:	8
+Version:	3.8.1
+Release:	0.1
 License:	GPL v2 with exceptions (see ICE_LICENSE)
 Group:		Applications
 #Source0Download: https://github.com/zeroc-ice/ice/releases
 Source0:	https://github.com/zeroc-ice/ice/archive/v%{version}/%{name}-%{version}.tar.gz
-# Source0-md5:	88bf025890cdd8d1193a7155dc539671
-# Extracted from http://zeroc.com/download/Ice/3.6/rpm/el7/SRPMS/ice-3.6.3-1.el7.src.rpm
-Source1:	Ice-rpmbuild-%{version}.tar.gz
-# Source1-md5:	38536c26981a5cdc9b57723bc28aea44
+# Source0-md5:	70a1ff1a81d2cc84a5687a5ce638e25f
+Source1:	https://github.com/zeroc-ice/ice-packaging/archive/v%{packaging_ver}/ice-packaging-%{packaging_ver}.tar.gz
+# Source1-md5:	8abaa6c0010b51427a9c65b391ee5367
 Source3:	%{name}gridgui
 Source4:	IceGridAdmin.desktop
 Patch0:		no-arch-opts.patch
-Patch1:		csharp-build.patch
-Patch2:		%{name}-db.patch
-Patch3:		%{name}-php7.patch
-Patch4:		gcc11.patch
+Patch1:		no-static.patch
 URL:		http://www.zeroc.com/
 BuildRequires:	bzip2-devel
 BuildRequires:	db-cxx-devel
 BuildRequires:	expat-devel
+BuildRequires:	gradle
 BuildRequires:	mcpp-devel
 BuildRequires:	openssl-devel
 BuildRequires:	rpmbuild(macros) >= 1.665
@@ -73,7 +72,7 @@ BuildRequires:	rpm-javaprov
 BuildRequires:	%{php_name}-devel >= 3:5.0.0
 %endif
 %if %{with python}
-BuildRequires:	python-devel
+BuildRequires:	python3-devel
 BuildRequires:	rpm-pythonprov
 %endif
 %if %{with ruby}
@@ -81,12 +80,13 @@ BuildRequires:	rpm-rubyprov
 BuildRequires:	ruby >= 1:1.8.6
 BuildRequires:	ruby-devel
 %endif
+Obsoletes:	pytnon-ice < 3.8
 # Ice doesn't officially support ppc64 at all; sparc64 doesn't have mono
 ExcludeArch:	ppc64 sparc64
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 # Some file suffixes we need to grab the right stuff for the file lists
-%define		soversion	36
+%define		soversion	38
 
 %description
 Ice is a modern alternative to object middleware such as CORBA or
@@ -121,18 +121,18 @@ Tools for developing Ice applications in C++.
 Narzędzia do tworzenia aplikacji Ice w C++.
 
 %package servers
-Summary:	Ice services to run through /etc/rc.d/init.d
-Summary(pl.UTF-8):	Usługi Ice do uruchamiania z poziomu /etc/rc.d/init.d
+Summary:	Ice services to run under systemd
+Summary(pl.UTF-8):	Usługi Ice do uruchamiania z poziomu systemd
 Group:		Development/Tools
-Requires(post,preun):	/sbin/chkconfig
 Requires:	%{name} = %{version}-%{release}
-Requires:	rc-scripts
+Requires(post,preun,postun):	systemd-units >= 1:250.1
+Requires:	systemd-units >= 1:250.1
 
 %description servers
-Ice services to run through /etc/rc.d/init.d.
+Ice services to run under systemd.
 
 %description servers -l pl.UTF-8
-Usługi Ice do uruchamiania z poziomu /etc/rc.d/init.d.
+Usługi Ice do uruchamiania z poziomu systemd.
 
 %package -n icegrid-gui
 Summary:	IceGrid Admin Tool
@@ -189,18 +189,18 @@ The Ice runtime for Ruby applications.
 %description -n ruby-%{name} -l pl.UTF-8
 Pakiet uruchomieniowy Ice dla aplikacji w języku Ruby.
 
-%package -n python-%{name}
-Summary:	The Ice runtime for Python applications
-Summary(pl.UTF-8):	Pakiet uruchomieniowy Ice dla aplikacji w Pythonie
+%package -n python3-%{name}
+Summary:	The Ice runtime for Python 3 applications
+Summary(pl.UTF-8):	Pakiet uruchomieniowy Ice dla aplikacji w Pythonie 3
 Group:		Development/Languages/Python
 Requires:	%{name} = %{version}-%{release}
-Requires:	python >= 1:2.3.4
+Requires:	python3
 
-%description -n python-%{name}
-The Ice runtime for Python applications.
+%description -n python3-%{name}
+The Ice runtime for Python 3 applications.
 
-%description -n python-%{name} -l pl.UTF-8
-Pakiet uruchomieniowy Ice dla aplikacji w Pythonie.
+%description -n python3-%{name} -l pl.UTF-8
+Pakiet uruchomieniowy Ice dla aplikacji w Pythonie 3.
 
 %package -n %{php_name}-%{name}
 Summary:	The Ice runtime for PHP applications
@@ -217,23 +217,16 @@ Pakiet uruchomieniowy Ice dla aplikacji w PHP.
 
 %prep
 %setup -q -a1
-%patch -P0 -p1
+#patch -P0 -p1
 %patch -P1 -p1
-%patch -P2 -p1
-%patch -P3 -p1
-%patch -P4 -p1
+
+# update path to our install
+%{__sed} -i -e 's,/usr/share/ice,%{_datadir}/Ice,' ice-packaging-*/ice/rpm/icegridregistry.conf
 
 %if %{with java}
 # we nuke it only when we build new class later, as ice build system expects the file being around
 %{__rm} cpp/src/ca/ImportKey.class
 %endif
-
-# update path to our install
-%{__sed} -i -e 's,/usr/share/Ice-[0-9.]\+,%{_datadir}/Ice,' Ice-rpmbuild-*/icegridregistry.conf
-%{__sed} -i -e 's,ln -s Ice-\$(VERSION)/slice,ln -s Ice/slice,' config/Make.common.rules
-%{__sed} -i -e 's,ln -s \.\./Ice-\$(VERSION)/slice,ln -s ../Ice/slice,' config/Make.common.rules
-
-%{__sed} -i -e '1s,/usr/bin/env python,%{__python},' cpp/config/upgradeicegrid36.py
 
 %build
 %if %{with java}
@@ -242,6 +235,7 @@ javac cpp/src/ca/ImportKey.java
 %endif
 
 %{__make} -C cpp \
+	V=1 \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -264,6 +258,8 @@ convert java/resources/icons/icegrid.ico temp.png
 export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %{__make} -C java \
+	V=1 \
+	GRADLE=/usr/bin/gradle \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -276,6 +272,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with dotnet}
 %{__make} -C csharp \
+	V=1 \
 	MCS=dmcs \
 %ifarch x32
 	lp64suffix=x32 \
@@ -285,6 +282,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with python}
 %{__make} -C python \
+	V=1 \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -297,6 +295,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with ruby}
 %{__make} -C ruby \
+	V=1 \
 	CC="%{__cc}" \
 	CXX="%{__cxx}" \
 	CFLAGS="%{rpmcflags} -fPIC" \
@@ -309,6 +308,7 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 
 %if %{with php}
 %{__make} -C php \
+	V=1 \
 	PHP_HOME=%{_prefix} \
 	CFLAGS="%{rpmcflags} -fPIC" \
 	CXXFLAGS="%{rpmcxxflags} -fPIC -pthread" \
@@ -321,6 +321,14 @@ export CLASSPATH=$(build-classpath db jgoodies-forms jgoodies-looks)
 %install
 rm -rf $RPM_BUILD_ROOT
 
+%{__make} install-slice \
+	SLICE_DIR_SYMLINK=yes \
+	DESTDIR=$RPM_BUILD_ROOT \
+	prefix=%{_prefix} \
+	install_configdir=%{_datadir}/Ice \
+	install_docdir=%{_datadir}/Ice \
+	install_slicedir=%{_datadir}/Ice/slice
+
 %{__make} -C cpp install \
 %ifarch x32
 	lp64suffix=x32 \
@@ -328,6 +336,7 @@ rm -rf $RPM_BUILD_ROOT
 	SLICE_DIR_SYMLINK=yes \
 	DESTDIR=$RPM_BUILD_ROOT \
 	prefix=%{_prefix} \
+	install_libdir=%{_libdir} \
 	install_configdir=%{_datadir}/Ice \
 	install_docdir=%{_datadir}/Ice \
 	install_slicedir=%{_datadir}/Ice/slice
@@ -387,16 +396,15 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 %endif
 	DESTDIR=$RPM_BUILD_ROOT \
 	prefix=%{_prefix} \
-	install_pythondir=%{py_sitedir} \
+	install_pythondir=%{py3_sitedir} \
 	install_docdir=%{_datadir}/Ice \
 	install_slicedir=%{_datadir}/Ice/slice
 
-%{__mv} $RPM_BUILD_ROOT%{py_sitedir}/IcePy.so{.%{version},}
-%{__rm} $RPM_BUILD_ROOT%{py_sitedir}/IcePy.so.*
+#{__mv} $RPM_BUILD_ROOT%{py3_sitedir}/IcePy.so{.%{version},}
+#{__rm} $RPM_BUILD_ROOT%{py3_sitedir}/IcePy.so.*
 
-%py_ocomp $RPM_BUILD_ROOT%{py_sitedir}
-%py_comp $RPM_BUILD_ROOT%{py_sitedir}
-%py_postclean
+%py3_comp $RPM_BUILD_ROOT%{py3_sitedir}
+%py3_ocomp $RPM_BUILD_ROOT%{py3_sitedir}
 %endif
 
 %if %{with ruby}
@@ -406,13 +414,10 @@ install -d $RPM_BUILD_ROOT%{_pkgconfigdir}
 %endif
 	DESTDIR=$RPM_BUILD_ROOT \
 	prefix=%{_prefix} \
+	install_rubylibdir=%{ruby_vendorarchdir} \
 	install_rubydir=%{ruby_vendorlibdir} \
-	install_libdir=%{ruby_vendorarchdir} \
 	install_docdir=%{_datadir}/Ice \
 	install_slicedir=%{_datadir}/Ice/slice
-
-%{__mv} $RPM_BUILD_ROOT%{ruby_vendorarchdir}/IceRuby.so{.%{version},}
-%{__rm} $RPM_BUILD_ROOT%{ruby_vendorarchdir}/IceRuby.so.*
 %endif
 
 %if %{with php}
@@ -429,16 +434,14 @@ install -d $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
 cp -a Ice-rpmbuild-*/ice.ini $RPM_BUILD_ROOT%{php_sysconfdir}/conf.d
 %endif
 
-# packaged as %doc
-%{__rm} $RPM_BUILD_ROOT%{_datadir}/Ice/{ICE_LICENSE,LICENSE}
-
 # Install the servers
 install -d $RPM_BUILD_ROOT%{_sysconfdir}
-cp -a Ice-rpmbuild-*/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
-install -d $RPM_BUILD_ROOT/etc/rc.d/init.d
+cp -a ice-packaging-*/ice/rpm/*.conf $RPM_BUILD_ROOT%{_sysconfdir}
+install -d $RPM_BUILD_ROOT%{systemdunitdir}
 for i in icegridregistry icegridnode glacier2router; do
-	cp -a Ice-rpmbuild-*/$i.redhat $RPM_BUILD_ROOT/etc/rc.d/init.d/$i
+	cp -a ice-packaging-*/ice/rpm/$i.service $RPM_BUILD_ROOT%{systemdunitdir}/$i.service
 done
+
 install -d $RPM_BUILD_ROOT%{_localstatedir}/lib/icegrid
 
 %clean
@@ -458,74 +461,53 @@ fi
 %files
 %defattr(644,root,root,755)
 %doc ICE_LICENSE CHANGELOG*.md README.md
-%attr(755,root,root) %{_bindir}/dumpdb
+%attr(755,root,root) %{_bindir}/dsnode
 %attr(755,root,root) %{_bindir}/glacier2router
+%attr(755,root,root) %{_bindir}/ice2slice
 %attr(755,root,root) %{_bindir}/icebox
 %attr(755,root,root) %{_bindir}/iceboxadmin
+%attr(755,root,root) %{_bindir}/icebridge
 %attr(755,root,root) %{_bindir}/icegridadmin
 %attr(755,root,root) %{_bindir}/icegriddb
 %attr(755,root,root) %{_bindir}/icegridnode
 %attr(755,root,root) %{_bindir}/icegridregistry
-%attr(755,root,root) %{_bindir}/icepatch2calc
-%attr(755,root,root) %{_bindir}/icepatch2client
-%attr(755,root,root) %{_bindir}/icepatch2server
 %attr(755,root,root) %{_bindir}/icestormadmin
 %attr(755,root,root) %{_bindir}/icestormdb
-%attr(755,root,root) %{_bindir}/icestormmigrate
-%attr(755,root,root) %{_bindir}/slice2html
-%attr(755,root,root) %{_bindir}/transformdb
-%{_mandir}/man1/dumpdb.1*
+%{_mandir}/man1/dsnode.1*
 %{_mandir}/man1/glacier2router.1*
+%{_mandir}/man1/ice2slice.1*
 %{_mandir}/man1/icebox.1*
 %{_mandir}/man1/iceboxadmin.1*
+%{_mandir}/man1/icebridge.1*
 %{_mandir}/man1/icegridadmin.1*
 %{_mandir}/man1/icegriddb.1*
 %{_mandir}/man1/icegridnode.1*
 %{_mandir}/man1/icegridregistry.1*
-%{_mandir}/man1/icepatch2calc.1*
-%{_mandir}/man1/icepatch2client.1*
-%{_mandir}/man1/icepatch2server.1*
 %{_mandir}/man1/icestormadmin.1*
 %{_mandir}/man1/icestormdb.1*
-%{_mandir}/man1/icestormmigrate.1*
-%{_mandir}/man1/slice2html.1*
-%{_mandir}/man1/transformdb.1*
-%attr(755,root,root) %{_libdir}/libFreeze.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libFreeze.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libDataStorm.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libDataStorm.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libGlacier2.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libGlacier2.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libGlacier2CryptPermissionsVerifier.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libGlacier2CryptPermissionsVerifier.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIce.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIce.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceBox.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceBox.so.%{soversion}
+%attr(755,root,root) %{_libdir}/libIceBT.so.*.*.*
+%attr(755,root,root) %ghost %{_libdir}/libIceBT.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceDiscovery.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceDiscovery.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceGrid.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceGrid.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceLocatorDiscovery.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceLocatorDiscovery.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIcePatch2.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIcePatch2.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceSSL.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceSSL.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceStorm.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceStorm.so.%{soversion}
 %attr(755,root,root) %{_libdir}/libIceStormService.so.*.*.*
 %attr(755,root,root) %ghost %{_libdir}/libIceStormService.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceUtil.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceUtil.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libIceXML.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libIceXML.so.%{soversion}
-%attr(755,root,root) %{_libdir}/libSlice.so.*.*.*
-%attr(755,root,root) %ghost %{_libdir}/libSlice.so.%{soversion}
 %dir %{_datadir}/Ice
 %{_datadir}/Ice/slice
-%{_datadir}/Ice/icegrid-slice.*.ice.gz
 %{_datadir}/Ice/templates.xml
-%attr(755,root,root) %{_datadir}/Ice/upgradeicegrid36.py
-%{_datadir}/slice
 
 %if %{with gui}
 %files -n icegrid-gui
@@ -540,56 +522,33 @@ fi
 %files devel
 %defattr(644,root,root,755)
 %attr(755,root,root) %{_bindir}/slice2cpp
-%attr(755,root,root) %{_bindir}/slice2freeze
-%attr(755,root,root) %{_libdir}/libFreeze.so
-%attr(755,root,root) %{_libdir}/libGlacier2CryptPermissionsVerifier.so
+%attr(755,root,root) %{_libdir}/libDataStorm.so
 %attr(755,root,root) %{_libdir}/libGlacier2.so
 %attr(755,root,root) %{_libdir}/libIceBox.so
+%attr(755,root,root) %{_libdir}/libIceBT.so
 %attr(755,root,root) %{_libdir}/libIceDiscovery.so
 %attr(755,root,root) %{_libdir}/libIceGrid.so
 %attr(755,root,root) %{_libdir}/libIceLocatorDiscovery.so
-%attr(755,root,root) %{_libdir}/libIcePatch2.so
 %attr(755,root,root) %{_libdir}/libIce.so
-%attr(755,root,root) %{_libdir}/libIceSSL.so
-%attr(755,root,root) %{_libdir}/libIceStormService.so
 %attr(755,root,root) %{_libdir}/libIceStorm.so
-%attr(755,root,root) %{_libdir}/libIceUtil.so
-%attr(755,root,root) %{_libdir}/libIceXML.so
-%attr(755,root,root) %{_libdir}/libSlice.so
-%{_includedir}/Freeze
+%{_includedir}/DataStorm
 %{_includedir}/Glacier2
 %{_includedir}/Ice
 %{_includedir}/IceBox
+%{_includedir}/IceBT
+%{_includedir}/IceDiscovery
+%{_includedir}/IceLocatorDiscovery
 %{_includedir}/IceGrid
-%{_includedir}/IcePatch2
-%{_includedir}/IceSSL
 %{_includedir}/IceStorm
-%{_includedir}/IceUtil
-%{_includedir}/Slice
 %{_mandir}/man1/slice2cpp.1*
-%{_mandir}/man1/slice2freeze.1*
+
+%{_libdir}/cmake/Ice-*
+
+# as we do not have -devel for each binding, these are in main -devel
 %if %{with java}
 %{_sysconfdir}/ant.d/ice
 %{_javadir}/ant/ant-ice-%{version}.jar
 %{_javadir}/ant/ant-ice.jar
-%endif
-
-%if %{with dotnet}
-%{_pkgconfigdir}/Glacier2.pc
-%{_pkgconfigdir}/Ice.pc
-%{_pkgconfigdir}/IceBox.pc
-%{_pkgconfigdir}/IceDiscovery.pc
-%{_pkgconfigdir}/IceGrid.pc
-%{_pkgconfigdir}/IceLocatorDiscovery.pc
-%{_pkgconfigdir}/IcePatch2.pc
-%{_pkgconfigdir}/IceSSL.pc
-%{_pkgconfigdir}/IceStorm.pc
-%endif
-
-# as we do not have -devel for each binding, these are in main -devel
-# -csharp
-%attr(755,root,root) %{_bindir}/slice2cs
-%{_mandir}/man1/slice2cs.1*
 # -java
 %attr(755,root,root) %{_bindir}/slice2freezej
 %attr(755,root,root) %{_bindir}/slice2java
@@ -598,21 +557,31 @@ fi
 # -js
 %attr(755,root,root) %{_bindir}/slice2js
 %{_mandir}/man1/slice2js.1*
-# -php
+%endif
+
+%if %{with dotnet}
+%attr(755,root,root) %{_bindir}/slice2cs
+%{_mandir}/man1/slice2cs.1*
+%endif
+
+%if %{with php}
 %attr(755,root,root) %{_bindir}/slice2php
 %{_mandir}/man1/slice2php.1*
-# -python
+%endif
+
+%if %{with python}
 %attr(755,root,root) %{_bindir}/slice2py
 %{_mandir}/man1/slice2py.1*
+%endif
 
 %files servers
 %defattr(644,root,root,755)
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/glacier2router.conf
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/icegridnode.conf
 %config(noreplace) %verify(not md5 mtime size) %{_sysconfdir}/icegridregistry.conf
-%attr(754,root,root) /etc/rc.d/init.d/glacier2router
-%attr(754,root,root) /etc/rc.d/init.d/icegridnode
-%attr(754,root,root) /etc/rc.d/init.d/icegridregistry
+%{systemdunitdir}/glacier2router.service
+%{systemdunitdir}/icegridnode.service
+%{systemdunitdir}/icegridregistry.service
 
 %if %{with dotnet}
 %files -n csharp-%{name}
@@ -639,33 +608,27 @@ fi
 %{_prefix}/lib/mono/gac/IceSSL
 %{_prefix}/lib/mono/gac/IceStorm
 
-%{_prefix}/lib/mono/gac/policy.3.6.Glacier2
-%{_prefix}/lib/mono/gac/policy.3.6.Ice
-%{_prefix}/lib/mono/gac/policy.3.6.IceBox
-%{_prefix}/lib/mono/gac/policy.3.6.IceDiscovery
-%{_prefix}/lib/mono/gac/policy.3.6.IceGrid
-%{_prefix}/lib/mono/gac/policy.3.6.IceLocatorDiscovery
-%{_prefix}/lib/mono/gac/policy.3.6.IcePatch2
-%{_prefix}/lib/mono/gac/policy.3.6.IceSSL
-%{_prefix}/lib/mono/gac/policy.3.6.IceStorm
+%{_prefix}/lib/mono/gac/policy.3.8.Glacier2
+%{_prefix}/lib/mono/gac/policy.3.8.Ice
+%{_prefix}/lib/mono/gac/policy.3.8.IceBox
+%{_prefix}/lib/mono/gac/policy.3.8.IceDiscovery
+%{_prefix}/lib/mono/gac/policy.3.8.IceGrid
+%{_prefix}/lib/mono/gac/policy.3.8.IceLocatorDiscovery
+%{_prefix}/lib/mono/gac/policy.3.8.IcePatch2
+%{_prefix}/lib/mono/gac/policy.3.8.IceSSL
+%{_prefix}/lib/mono/gac/policy.3.8.IceStorm
 %endif
 
 %if %{with python}
-%files -n python-%{name}
+%files -n python3-%{name}
 %defattr(644,root,root,755)
-%attr(755,root,root) %{py_sitedir}/IcePy.so
-%{py_sitedir}/IceBox
-%{py_sitedir}/IceGrid
-%{py_sitedir}/IceMX
-%{py_sitedir}/IcePatch2
-%{py_sitedir}/IceStorm
-%{py_sitedir}/Glacier2*.py[co]
-%{py_sitedir}/Ice.py[co]
-%{py_sitedir}/IceBox*.py[co]
-%{py_sitedir}/IceGrid*.py[co]
-%{py_sitedir}/IcePatch2*.py[co]
-%{py_sitedir}/IceStorm*.py[co]
-%{py_sitedir}/Ice_*.py[co]
+%attr(755,root,root) %{py3_sitedir}/IcePy.*.so
+%{py3_sitedir}/IceBox
+%{py3_sitedir}/IceGrid
+%{py3_sitedir}/IceMX
+%{py3_sitedir}/IceStorm
+%{py3_sitedir}/Glacier2
+%{py3_sitedir}/Ice
 %endif
 
 %if %{with ruby}
@@ -679,8 +642,6 @@ fi
 %{ruby_vendorlibdir}/IceBox
 %{ruby_vendorlibdir}/IceGrid.rb
 %{ruby_vendorlibdir}/IceGrid
-%{ruby_vendorlibdir}/IcePatch2.rb
-%{ruby_vendorlibdir}/IcePatch2
 %{ruby_vendorlibdir}/IceStorm.rb
 %dir %{ruby_vendorlibdir}/IceStorm
 %{ruby_vendorlibdir}/IceStorm/IceStorm.rb
